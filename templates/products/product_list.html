@@ -1,0 +1,108 @@
+<style>
+  body {
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 20px;
+  }
+
+  nav a {
+    color: #007BFF;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  nav a:hover {
+    background-color: #0056b3;
+    color: #fff;
+  }
+
+  h1 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+  }
+
+  a.add-product {
+    display: inline-block;
+    margin-bottom: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 10px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+  }
+
+  a.add-product:hover {
+    background-color: #1e7e34;
+  }
+
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+
+  ul li {
+    background-color: white;
+    margin-bottom: 10px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    font-size: 16px;
+  }
+
+  ul li a {
+    color: #007BFF;
+    text-decoration: none;
+    margin-right: 12px;
+    font-weight: 600;
+  }
+
+  ul li a:hover {
+    text-decoration: underline;
+  }
+
+  ul li a.delete {
+    color: #dc3545;
+    font-weight: 700;
+  }
+
+  ul li a.delete:hover {
+    text-decoration: underline;
+    color: #a71d2a;
+  }
+
+  ul li a.edit {
+    color: #ffc107;
+    font-weight: 700;
+  }
+
+  ul li a.edit:hover {
+    color: #cc9a06;
+    text-decoration: underline;
+  }
+</style>
+
+<nav>
+  <a href="{% url 'products' %}">Products</a> |
+  <a href="{% url 'logout' %}">Logout</a>
+</nav>
+
+<h1>Sizning mahsulotlaringiz</h1>
+
+<a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
+
+<ul>
+  {% for product in products %}
+    <li>
+      <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> - {{ product.selling_price }} so'm
+      | <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
+      | <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
+    </li>
+  {% empty %}
+    <li>Hozircha mahsulotingiz yo‘q.</li>
+  {% endfor %}
+</ul>

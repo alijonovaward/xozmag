@@ -1,0 +1,54 @@
+<style>
+  body {
+    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 20px;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+  }
+
+  form button[type="submit"] {
+    background-color: #dc3545; /* qizil rang — o'chirish uchun */
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-right: 15px;
+  }
+
+  form button[type="submit"]:hover {
+    background-color: #a71d2a;
+  }
+
+  form button[type="submit"]:active {
+    background-color: #800f1a;
+  }
+
+  form a {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 10px 15px;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+  }
+
+  form a:hover {
+    background-color: #0056b3;
+    color: white;
+  }
+</style>
+
+<h2>{{ object.name }} mahsulotini o'chirmoqchimisiz?</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Ha, o'chir</button>
+  <a href="{% url 'products' %}">Bekor qilish</a>
+</form>

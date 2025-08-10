@@ -5,6 +5,10 @@
     <title>Title</title>
 </head>
 <body>
+    <nav>
+        <a href="{% url 'products' %}">Products</a> |
+        <a href="{% url 'logout' %}">Logout</a>
+    </nav>
     <h1>Assalomu alaykum, {{ request.user.username }}</h1>
     <a href="{% url 'logout' %}">Chiqish</a>
 

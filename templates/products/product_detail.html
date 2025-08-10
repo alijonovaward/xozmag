@@ -1,0 +1,68 @@
+<style>
+  body {
+    background-color: #f9f9f9; /* oq va yengil kulrang aralash fon */
+    font-family: Arial, sans-serif;
+    color: #333;
+    margin: 20px;
+  }
+
+  nav a {
+    color: #007BFF;  /* ko'k rang tugmalar uchun */
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  nav a:hover {
+    background-color: #0056b3;  /* hovorga ko'k fon */
+    color: #fff;
+  }
+
+  h2 {
+    margin-top: 30px;
+    margin-bottom: 10px;
+  }
+
+  p {
+    font-size: 18px;
+    margin: 6px 0;
+  }
+
+  /* Back button uslubi */
+  a.back-button {
+    display: inline-block;
+    margin-top: 25px;
+    background-color: #6c757d; /* kulrang fon */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    user-select: none; /* matnni belgilashni oldini olish */
+  }
+
+  a.back-button:hover {
+    background-color: #5a6268;
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  }
+
+  a.back-button:active {
+    background-color: #495057;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+  }
+</style>
+
+<nav>
+    <a href="{% url 'products' %}">Products</a> |
+    <a href="{% url 'logout' %}">Logout</a>
+</nav>
+
+<h2>{{ product.name }}</h2>
+<p>Asl narxi: {{ product.price }}</p>
+<p>Sotish narxi: {{ product.selling_price }}</p>
+<p>Omborda: {{ product.stock }}</p>
+
+<a href="{% url 'products' %}" class="back-button">Orqaga</a>
