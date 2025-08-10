@@ -52,12 +52,28 @@
     border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     font-size: 16px;
+
+    display: flex;              /* qatorga joylash */
+    justify-content: space-between; /* oraliqni teng taqsimlash */
+    align-items: center;        /* vertikal markazlash */
+    gap: 15px;                  /* elementlar orasida bo‘sh joy */
+  }
+
+  .product-info {
+    flex: 1; /* nom va narx bo'limi o'zgaruvchan kenglikda */
+  }
+
+  .actions {
+    white-space: nowrap; /* tugmalar yonma-yon turadi */
+  }
+
+  .actions a {
+    margin-left: 10px;
   }
 
   ul li a {
     color: #007BFF;
     text-decoration: none;
-    margin-right: 12px;
     font-weight: 600;
   }
 
@@ -98,9 +114,13 @@
 <ul>
   {% for product in products %}
     <li>
-      <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> - {{ product.selling_price }} so'm
-      | <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
-      | <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
+      <div class="product-info">
+        <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm
+      </div>
+      <div class="actions">
+        <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
+        <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
+      </div>
     </li>
   {% empty %}
     <li>Hozircha mahsulotingiz yo‘q.</li>
