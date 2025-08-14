@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sotuv</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; max-width: 800px }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left }
+    #resultList li { margin: 8px 0 }
+    form.inline { display: inline-flex; gap: 6px; align-items: center; margin-left: 8px }
+    input[name="quantity"] { width: 80px }
+  </style>
+</head>
+<body>
+  <h1>Sotuv sahifasi</h1>
+
+  <input type="text" id="searchBox" placeholder="Mahsulot nomi..." autocomplete="off" />
+  <ul id="resultList"></ul>
+
+  <h2>Korzinka</h2>
+  <div id="cartBlock">
+    {% if rows %}
+      <table>
+        <tr>
+          <th>Mahsulot</th>
+          <th>Narx</th>
+          <th>Miqdor</th>
+          <th>Jami</th>
+          <th></th>
+        </tr>
+        {% for r in rows %}
+        <tr>
+          <td>{{ r.name }}</td>
+          <td>{{ r.price }}</td>
+          <td>{{ r.quantity }}</td>
+          <td>{{ r.total }}</td>
+          <td><button onclick="removeFromCart('{{ r.id }}')">O'chirish</button></td>
+        </tr>
+        {% endfor %}
+      </table>
+      <p><a href="{% url 'close_cart' %}">Korzinkani yopish</a></p>
+    {% else %}
+      <p>Korzinka bo'sh</p>
+    {% endif %}
+  </div>
+
+  {% csrf_token %}
+
+  <script>
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    function renderCart(cart) {
+      let html = '';
+      const keys = Object.keys(cart || {});
+      if (keys.length) {
+        html += `<table>
+          <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th><th></th></tr>`;
+        keys.forEach(id => {
+          const item = cart[id];
+          const price = parseFloat(item.price) || 0;
+          const qty = parseFloat(item.quantity) || 0;
+          const total = (price * qty).toFixed(2);
+          html += `<tr>
+            <td>${item.name}</td>
+            <td>${price}</td>
+            <td>${qty}</td>
+            <td>${total}</td>
+            <td><button onclick="removeFromCart('${id}')">O'chirish</button></td>
+          </tr>`;
+        });
+        html += `</table>
+                 <p><a href="/sales/cart/close/">Korzinkani yopish</a></p>`;
+      } else {
+        html = `<p>Korzinka bo'sh</p>`;
+      }
+      document.getElementById('cartBlock').innerHTML = html;
+    }
+
+    function removeFromCart(productId) {
+      fetch(`/sales/remove/${productId}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF_TOKEN }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) renderCart(data.cart);
+        else alert("O'chirishda xatolik: " + (data.error || 'noma’lum'));
+      })
+      .catch(() => alert("Tarmoq xatosi"));
+    }
+
+    document.getElementById('searchBox').addEventListener('input', function () {
+      const query = this.value;
+      fetch(`/sales/api/search/?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+          const list = document.getElementById('resultList');
+          list.innerHTML = '';
+          (data.results || []).forEach(p => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
+              <form class="inline" onsubmit="addToCart(event, ${p.id})">
+                <input type="text" name="quantity" inputmode="decimal" pattern="\\d+([\\.,]\\d+)?" value="1" />
+                <button type="submit">Qo'shish</button>
+              </form>`;
+            list.appendChild(li);
+          });
+        });
+    });
+
+    function addToCart(evt, productId) {
+      evt.preventDefault();
+      let q = evt.target.quantity.value.trim();
+      q = q.replace(',', '.');
+      if (!q || isNaN(q) || Number(q) <= 0) {
+        alert('Miqdor noto‘g‘ri');
+        return;
+      }
+      const body = new URLSearchParams({ quantity: q }).toString();
+
+      fetch(`/sales/add/${productId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': CSRF_TOKEN,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          renderCart(data.cart);
+          evt.target.quantity.value = '';                 // miqdor inputini tozalash
+          document.getElementById('searchBox').value = ''; // qidiruvni tozalash
+          document.getElementById('resultList').innerHTML = ''; // natijalar ro‘yxatini tozalash
+        } else {
+          alert('Qo‘shishda xatolik: ' + (data.error || 'noma’lum'));
+        }
+      })
+      .catch(() => alert('Tarmoq xatosi'));
+    }
+  </script>
+</body>
+</html>
