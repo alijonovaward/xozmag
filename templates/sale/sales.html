@@ -4,22 +4,111 @@
   <meta charset="UTF-8">
   <title>Savdo sahifasi</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; max-width: 800px; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-    #search-results div {
-      padding: 5px; cursor: pointer; border-bottom: 1px solid #eee;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
     }
-    #search-results div:hover { background: #f9f9f9; }
+    nav {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    nav a {
+      color: #007BFF;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    nav a:hover {
+      background-color: #0056b3;
+      color: #fff;
+    }
+    h1, h2 { margin-top: 20px; }
+
+    input#search {
+      width: 100%;
+      max-width: 400px;
+      padding: 8px 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    #search-results div {
+      padding: 5px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      background: #fff;
+    }
+    #search-results div:hover { background: #f1f1f1; }
+
     .cart-header { margin-top: 30px; }
-    button { padding: 6px 12px; }
-    input.qty-input { width: 50px; }
-    #receipt-description { width: 300px; margin-top: 10px; padding: 5px; }
+    button {
+      padding: 6px 12px;
+      border: none;
+      background: #007BFF;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #0056b3; }
+    input.qty-input { width: 60px; padding: 5px; font-size: 14px; }
+
+    #receipt-description {
+      width: 100%;
+      max-width: 300px;
+      margin-top: 10px;
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    /* Jadvalni responsive qilish */
+    .table-wrapper {
+      overflow-x: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-top: 15px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th { background: #f0f0f0; }
+
+    @media (max-width: 768px) {
+      body { margin: 10px; }
+      nav { gap: 6px; }
+      nav a { padding: 6px 10px; font-size: 14px; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 18px; }
+      input#search { font-size: 14px; }
+      button { font-size: 13px; padding: 5px 10px; }
+    }
+
+    @media (max-width: 480px) {
+      input.qty-input { width: 50px; font-size: 13px; }
+      #receipt-description { max-width: 100%; }
+      table { min-width: 480px; } /* horizontal scroll ishlaydi */
+    }
   </style>
   <script>
     let CSRF_TOKEN = '{{ csrf_token }}';
-
+    /* --- JavaScript funksiyalar o'zgarmagan, avvalgidek qoldiriladi --- */
     function searchProduct() {
       const searchInput = document.getElementById("search");
       const q = searchInput.value.trim();
@@ -41,16 +130,14 @@
           });
           const resultsDiv = document.getElementById("search-results");
           resultsDiv.innerHTML = html;
-          searchInput.focus();  // focusni saqlash
+          searchInput.focus();
         });
     }
-
     function addToCart(productId) {
       const qtyInput = document.getElementById("qty_" + productId);
       const qty = qtyInput ? qtyInput.value : 1;
       const formData = new FormData();
       formData.append("quantity", qty);
-
       fetch(`/sales/add/${productId}/`, {
         method: "POST",
         headers: { "X-CSRFToken": CSRF_TOKEN },
@@ -60,22 +147,14 @@
       .then(data => {
         if (data.success) {
           renderCart(data.cart);
-
-          // Search input va natijalarni tozalash
           const searchInput = document.getElementById("search");
           searchInput.value = "";
           document.getElementById("search-results").innerHTML = "";
-          searchInput.focus();  // input focusni qaytarish
-
-          // Mahsulot miqdori inputini default 1 ga qaytarish
+          searchInput.focus();
           if(qtyInput) qtyInput.value = 1;
-
-        } else {
-          alert(data.error || "Xatolik");
-        }
+        } else { alert(data.error || "Xatolik"); }
       });
     }
-
     function removeFromCart(productId) {
       fetch(`/sales/remove/${productId}/`, {
         method: "POST",
@@ -83,14 +162,10 @@
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success) {
-          renderCart(data.cart);
-        } else {
-          alert(data.error || "O‘chirishda xatolik");
-        }
+        if (data.success) { renderCart(data.cart); }
+        else { alert(data.error || "O‘chirishda xatolik"); }
       });
     }
-
     function renderCart(cart) {
       const tbody = document.getElementById("cart-body");
       tbody.innerHTML = "";
@@ -110,12 +185,10 @@
       }
       document.getElementById("cart-total").innerText = total.toFixed(2);
     }
-
     function closeCart() {
       const description = document.getElementById("receipt-description").value;
       const formData = new FormData();
       formData.append("description", description);
-
       fetch("/sales/cart/close/", {
           method: "POST",
           headers: { "X-CSRFToken": CSRF_TOKEN },
@@ -125,13 +198,7 @@
       .then(data => {
           if (data.success) {
               const now = new Date();
-              const timeStr = now.toLocaleTimeString("uz-UZ", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                  hour12: false
-              });
-
+              const timeStr = now.toLocaleTimeString("uz-UZ",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
               let html = `<h2>Chek</h2>`;
               html += `<p>Vaqt: ${timeStr}</p>`;
               html += `<p>Kimga: ${description || "-"}</p>`;
@@ -147,8 +214,6 @@
               });
               html += `</table>`;
               html += `<p><b>Umumiy:</b> ${data.total}</p>`;
-
-              // Print div
               let printDiv = document.getElementById('print-div');
               if (!printDiv) {
                   printDiv = document.createElement('div');
@@ -157,26 +222,23 @@
                   document.body.appendChild(printDiv);
               }
               printDiv.innerHTML = html;
-
-              // Print qilish
               const originalContents = document.body.innerHTML;
               document.body.innerHTML = printDiv.innerHTML;
               window.print();
               document.body.innerHTML = originalContents;
               location.reload();
-          } else {
-              alert("Korzinkani yopishda xatolik");
-          }
+          } else { alert("Korzinkani yopishda xatolik"); }
       });
     }
   </script>
 </head>
 <body>
     <nav>
-        <a href="{% url 'products' %}">Products</a> |
-        <a href="{% url 'sales_page' %}">Sales</a> |
-        <a href="{% url 'logout' %}">Logout</a> |
+        <a href="{% url 'products' %}">Tovarlar</a>
+        <a href="{% url 'sales_page' %}">Sotuv</a>
         <a href="{% url 'receipt_list' %}">Cheklar</a>
+        <a href="{% url 'dashboard' %}">Tushum</a>
+        <a href="{% url 'logout' %}">Chiqish</a>
     </nav>
   <h1>Savdo sahifasi</h1>
   <input type="text" id="search" placeholder="Mahsulot qidirish..." onkeyup="searchProduct()">
@@ -184,38 +246,39 @@
 
   <div class="cart-header">
     <h2>Korzinka</h2>
-
     <label for="receipt-description">Chek kimga tegishli?</label><br>
     <input type="text" id="receipt-description" placeholder="Masalan: Aliyev Oybek"><br>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Mahsulot</th>
-          <th>Narx</th>
-          <th>Miqdor</th>
-          <th>Jami</th>
-          <th>Amal</th>
-        </tr>
-      </thead>
-      <tbody id="cart-body">
-        {% for r in rows %}
-        <tr>
-          <td>{{ r.name }}</td>
-          <td>{{ r.price }}</td>
-          <td>{{ r.quantity }}</td>
-          <td>{{ r.total }}</td>
-          <td><button onclick="removeFromCart({{ r.id }})">O‘chirish</button></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="3"><b>Umumiy</b></td>
-          <td colspan="2"><b id="cart-total">0</b></td>
-        </tr>
-      </tfoot>
-    </table>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Mahsulot</th>
+            <th>Narx</th>
+            <th>Miqdor</th>
+            <th>Jami</th>
+            <th>Amal</th>
+          </tr>
+        </thead>
+        <tbody id="cart-body">
+          {% for r in rows %}
+          <tr>
+            <td>{{ r.name }}</td>
+            <td>{{ r.price }}</td>
+            <td>{{ r.quantity }}</td>
+            <td>{{ r.total }}</td>
+            <td><button onclick="removeFromCart({{ r.id }})">O‘chirish</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><b>Umumiy</b></td>
+            <td colspan="2"><b id="cart-total">0</b></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
     <button onclick="closeCart()">Korzinkani yopish</button>
     <p><a href="{% url 'receipt_list' %}">Cheklar ro‘yxatini ko‘rish</a></p>

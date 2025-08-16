@@ -2,99 +2,302 @@
 <html lang="uz">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Statistika</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-    form input, form button { margin-right: 10px; padding: 5px; }
+    :root{
+      --primary:#007bff;
+      --primary-dark:#0056b3;
+      --muted:#6c757d;
+      --bg:#f9f9f9;
+      --card:#ffffff;
+      --border:#e6e6e6;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --radius: 10px;
+    }
+
+    body{
+      background: var(--bg);
+      font-family: Arial, sans-serif;
+      color:#333;
+      margin:20px;
+    }
+
+    .container{
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* NAV */
+    nav{
+      margin-bottom:20px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    nav a{
+      color: var(--primary);
+      text-decoration:none;
+      padding:8px 14px;
+      border-radius:6px;
+      transition: background-color .3s ease, color .3s ease;
+      background: var(--card);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      border:1px solid var(--border);
+      font-size:15px;
+    }
+    nav a:hover{
+      background: var(--primary-dark);
+      color:#fff;
+    }
+
+    h1{
+      margin:6px 0 12px 0;
+      font-weight: 500;
+      text-align:center;
+    }
+    h2{
+      margin:22px 0 10px 0;
+      font-weight: 500;
+    }
+
+    /* FILTER FORM */
+    .filter-card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:14px 18px;
+      align-items:flex-end;
+      margin-bottom: 16px;
+    }
+    .field{
+      min-width: 200px;
+    }
+    .field label{
+      display:block;
+      font-size:13px;
+      color:#555;
+      margin-bottom:6px;
+      font-weight:600;
+    }
+    .field input[type="date"],
+    .field input[type="text"],
+    .filter-card button{
+      padding:8px 10px;
+      border:1px solid #ccc;
+      border-radius:6px;
+      font-size:14px;
+      box-sizing:border-box;
+      background:#fff;
+    }
+    .filter-card .btn{
+      border:none;
+      background: var(--primary);
+      color:#fff;
+      cursor:pointer;
+      transition: background-color .3s ease;
+    }
+    .filter-card .btn:hover{ background: var(--primary-dark); }
+    .filter-card .btn-muted{
+      background: var(--muted);
+    }
+    .filter-card .btn-muted:hover{
+      background:#565e64;
+    }
+
+    /* INFO CARDS (totals) */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+      gap:12px;
+      margin: 10px 0 6px 0;
+    }
+    .stat-card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:12px 14px;
+    }
+    .stat-title{
+      font-size:13px;
+      color:#555;
+      margin:0 0 6px 0;
+    }
+    .stat-value{
+      font-size:18px;
+      font-weight:700;
+    }
+
+    /* TABLES */
+    .table-wrapper{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:10px;
+      overflow-x:auto;  /* responsive scroll */
+    }
+    table{
+      border-collapse: collapse;
+      width:100%;
+      min-width: 800px; /* kichik ekranda scroll */
+    }
+    th, td{
+      border:1px solid #ccc;
+      padding:8px 10px;
+      text-align:left;
+      font-size:14px;
+      white-space: nowrap; /* ustunlar yiqilmasin */
+    }
+    th{ background:#f0f0f0; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px){
+      body{ margin:12px; }
+      nav a{ padding:7px 12px; font-size:14px; }
+      .field{ min-width: 160px; }
+      .stats{ grid-template-columns: 1fr; }
+      h1{ font-size:22px; }
+      h2{ font-size:18px; }
+    }
+
+    @media (max-width: 480px){
+      .filter-card{ gap:10px; }
+      .field{ min-width: 100%; }
+      .filter-card .btn,
+      .filter-card .btn-muted{
+        width: 100%;
+      }
+      table{ min-width: 640px; }
+    }
   </style>
 </head>
 <body>
-<h1>Cheklar statistika</h1>
+<div class="container">
+  <nav>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'logout' %}">Chiqish</a>
+  </nav>
 
-<!-- Filter form -->
-<form method="get">
-    <label>Boshlanish sanasi:</label>
-    <input type="date" name="start_date" value="{{ start_date }}">
-    <label>Tugash sanasi:</label>
-    <input type="date" name="end_date" value="{{ end_date }}">
-    <button type="submit">Filtrlash</button>
-    <button type="button" onclick="window.location.href='{% url 'dashboard' %}'">Tozalash</button>
-</form>
+  <h1>Cheklar statistika</h1>
 
-<h2>Bugungi cheklar</h2>
-<table>
-    <thead>
+  <!-- FILTER -->
+  <form method="get" class="filter-card">
+    <div class="field">
+      <label>Boshlanish sanasi</label>
+      <input type="date" name="start_date" value="{{ start_date }}">
+    </div>
+    <div class="field">
+      <label>Tugash sanasi</label>
+      <input type="date" name="end_date" value="{{ end_date }}">
+    </div>
+    <button type="submit" class="btn">Filtrlash</button>
+    <button type="button" class="btn btn-muted" onclick="window.location.href='{% url 'dashboard' %}'">Tozalash</button>
+  </form>
+
+  <!-- TODAY -->
+  <h2>Bugungi cheklar</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
         <tr>
-            <th>Receipt ID</th>
-            <th>Mahsulot</th>
-            <th>Miqdor</th>
-            <th>Sotish narxi</th>
-            <th>Kelgan narxi</th>
-            <th>Foyda</th>
-            <th>Jami</th>
-            <th>Vaqt</th>
-            <th>Kimga</th>
+          <th>Receipt ID</th>
+          <th>Mahsulot</th>
+          <th>Miqdor</th>
+          <th>Sotish narxi</th>
+          <th>Kelgan narxi</th>
+          <th>Foyda</th>
+          <th>Jami</th>
+          <th>Vaqt</th>
+          <th>Kimga</th>
         </tr>
-    </thead>
-    <tbody>
+      </thead>
+      <tbody>
         {% for it in today_items %}
         <tr>
-            <td>{{ it.receipt_id }}</td>
-            <td>{{ it.product_name }}</td>
-            <td>{{ it.quantity }}</td>
-            <td>{{ it.selling_price }}</td>
-            <td>{{ it.cost_price }}</td>
-            <td>{{ it.plus }}</td>
-            <td>{{ it.item_total }}</td>
-            <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
-            <td>{{ it.description|default:"-" }}</td>
+          <td>{{ it.receipt_id }}</td>
+          <td>{{ it.product_name }}</td>
+          <td>{{ it.quantity }}</td>
+          <td>{{ it.selling_price }}</td>
+          <td>{{ it.cost_price }}</td>
+          <td>{{ it.plus }}</td>
+          <td>{{ it.item_total }}</td>
+          <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
+          <td>{{ it.description|default:"-" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="8">Bugungi chek yo‘q</td></tr>
+        <tr><td colspan="9">Bugungi chek yo‘q</td></tr>
         {% endfor %}
-    </tbody>
-</table>
-<p><b>Bugungi jami summa:</b> {{ today_total }}</p>
-<p><b>Bugungi jami foyda:</b> {{ today_plus }}</p>
+      </tbody>
+    </table>
+  </div>
 
+  <div class="stats">
+    <div class="stat-card">
+      <p class="stat-title">Bugungi jami summa</p>
+      <p class="stat-value">{{ today_total }}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-title">Bugungi jami foyda</p>
+      <p class="stat-value">{{ today_plus }}</p>
+    </div>
+  </div>
 
-<h2>Filtrlangan cheklar</h2>
-<table>
-    <thead>
+  <!-- FILTERED -->
+  <h2>Filtrlangan cheklar</h2>
+  <div class="table-wrapper">
+    <table>
+      <thead>
         <tr>
-            <th>Receipt ID</th>
-            <th>Mahsulot</th>
-            <th>Miqdor</th>
-            <th>Sotish narxi</th>
-            <th>Kelgan narxi</th>
-            <th>Foyda</th>
-            <th>Jami</th>
-            <th>Vaqt</th>
-            <th>Kimga</th>
+          <th>Receipt ID</th>
+          <th>Mahsulot</th>
+          <th>Miqdor</th>
+          <th>Sotish narxi</th>
+          <th>Kelgan narxi</th>
+          <th>Foyda</th>
+          <th>Jami</th>
+          <th>Vaqt</th>
+          <th>Kimga</th>
         </tr>
-    </thead>
-    <tbody>
+      </thead>
+      <tbody>
         {% for it in filtered_items %}
         <tr>
-            <td>{{ it.receipt_id }}</td>
-            <td>{{ it.product_name }}</td>
-            <td>{{ it.quantity }}</td>
-            <td>{{ it.selling_price }}</td>
-            <td>{{ it.cost_price }}</td>
-            <td>{{ it.plus }}</td>
-            <td>{{ it.item_total }}</td>
-            <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
-            <td>{{ it.description|default:"-" }}</td>
+          <td>{{ it.receipt_id }}</td>
+          <td>{{ it.product_name }}</td>
+          <td>{{ it.quantity }}</td>
+          <td>{{ it.selling_price }}</td>
+          <td>{{ it.cost_price }}</td>
+          <td>{{ it.plus }}</td>
+          <td>{{ it.item_total }}</td>
+          <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
+          <td>{{ it.description|default:"-" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="8">Chek yo‘q</td></tr>
+        <tr><td colspan="9">Chek yo‘q</td></tr>
         {% endfor %}
-    </tbody>
-</table>
-<p><b>Filtrlangan jami summa:</b> {{ filtered_total }}</p>
-<p><b>Filtrlangan jami foyda:</b> {{ total_plus }}</p>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <p class="stat-title">Filtrlangan jami summa</p>
+      <p class="stat-value">{{ filtered_total }}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-title">Filtrlangan jami foyda</p>
+      <p class="stat-value">{{ total_plus }}</p>
+    </div>
+  </div>
+</div>
 </body>
 </html>

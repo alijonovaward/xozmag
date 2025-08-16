@@ -1,54 +1,89 @@
-<style>
-  body {
-    background-color: #f9f9f9;
-    font-family: Arial, sans-serif;
-    color: #333;
-    margin: 20px;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahsulotni o'chirish</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 20px;
+        }
 
-  h2 {
-    margin-bottom: 20px;
-  }
+        h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: normal;
+        }
 
-  form button[type="submit"] {
-    background-color: #dc3545; /* qizil rang — o'chirish uchun */
-    border: none;
-    color: white;
-    padding: 10px 25px;
-    font-size: 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-right: 15px;
-  }
+        form {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
 
-  form button[type="submit"]:hover {
-    background-color: #a71d2a;
-  }
+        form button[type="submit"] {
+            background-color: #dc3545; /* qizil rang — o‘chirish uchun */
+            border: none;
+            color: white;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-bottom: 10px;
+            width: 100%;
+        }
 
-  form button[type="submit"]:active {
-    background-color: #800f1a;
-  }
+        form button[type="submit"]:hover {
+            background-color: #a71d2a;
+        }
 
-  form a {
-    color: #007BFF;
-    text-decoration: none;
-    font-weight: 600;
-    padding: 10px 15px;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-  }
+        form button[type="submit"]:active {
+            background-color: #800f1a;
+        }
 
-  form a:hover {
-    background-color: #0056b3;
-    color: white;
-  }
-</style>
+        form a {
+            display: inline-block;
+            color: white;
+            background-color: #007BFF;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 25px;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-<h2>{{ object.name }} mahsulotini o'chirmoqchimisiz?</h2>
+        form a:hover {
+            background-color: #0056b3;
+        }
 
-<form method="post">
-  {% csrf_token %}
-  <button type="submit">Ha, o'chir</button>
-  <a href="{% url 'products' %}">Bekor qilish</a>
-</form>
+        @media (max-width: 600px) {
+            h2 {
+                font-size: 20px;
+            }
+            form {
+                margin: 10px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>{{ object.name }} mahsulotini o'chirmoqchimisiz?</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Ha, o'chir</button>
+        <a href="{% url 'products' %}">Bekor qilish</a>
+    </form>
+</body>
+</html>

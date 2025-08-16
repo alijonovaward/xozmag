@@ -1,68 +1,141 @@
-<style>
-  body {
-    background-color: #f9f9f9; /* oq va yengil kulrang aralash fon */
-    font-family: Arial, sans-serif;
-    color: #333;
-    margin: 20px;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahsulot ma'lumotlari</title>
+    <style>
+        body {
+            background-color: #ffffff;
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 20px;
+            max-width: 1000px; /* juda katta ekranlarda markazda bo'lishi uchun */
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-  nav a {
-    color: #007BFF;  /* ko'k rang tugmalar uchun */
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
+        nav {
+            margin-bottom: 20px;
+            text-align: center;
+        }
 
-  nav a:hover {
-    background-color: #0056b3;  /* hovorga ko'k fon */
-    color: #fff;
-  }
+        nav a {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 15px;
+            margin: 4px 6px;
+            transition: background-color 0.3s ease;
+        }
 
-  h2 {
-    margin-top: 30px;
-    margin-bottom: 10px;
-  }
+        nav a:hover {
+            background-color: #0056b3;
+        }
 
-  p {
-    font-size: 18px;
-    margin: 6px 0;
-  }
+        h2 {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            font-weight: normal;
+            text-align: center;
+        }
 
-  /* Back button uslubi */
-  a.back-button {
-    display: inline-block;
-    margin-top: 25px;
-    background-color: #6c757d; /* kulrang fon */
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    font-weight: 600;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    user-select: none; /* matnni belgilashni oldini olish */
-  }
+        p {
+            font-size: 18px;
+            margin: 8px 0;
+            text-align: center;
+        }
 
-  a.back-button:hover {
-    background-color: #5a6268;
-    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-  }
+        a.back-button {
+            display: block;
+            margin: 30px auto 0;
+            background-color: #6c757d;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            text-align: center;
+            width: 220px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            user-select: none;
+        }
 
-  a.back-button:active {
-    background-color: #495057;
-    box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
-  }
-</style>
+        a.back-button:hover {
+            background-color: #5a6268;
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
 
-<nav>
-    <a href="{% url 'products' %}">Products</a> |
-    <a href="{% url 'logout' %}">Logout</a>
-</nav>
+        a.back-button:active {
+            background-color: #495057;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+        }
 
-<h2>{{ product.name }}</h2>
-<p>Asl narxi: {{ product.price }}</p>
-<p>Sotish narxi: {{ product.selling_price }}</p>
-<p>Omborda: {{ product.stock }}</p>
+        /* --- Telefon (<600px) --- */
+        @media (max-width: 600px) {
+            nav a {
+                display: block;
+                width: 100%;
+                text-align: center;
+                font-size: 16px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            p {
+                font-size: 16px;
+            }
+            a.back-button {
+                width: 100%;
+            }
+        }
 
-<a href="{% url 'products' %}" class="back-button">Orqaga</a>
+        /* --- Planshet (600px–1024px) --- */
+        @media (min-width: 601px) and (max-width: 1024px) {
+            nav a {
+                font-size: 16px;
+                padding: 12px 18px;
+            }
+            h2 {
+                font-size: 22px;
+            }
+            p {
+                font-size: 17px;
+            }
+            a.back-button {
+                width: 60%;
+            }
+        }
+
+        /* --- Katta ekranlar (>1024px) --- */
+        @media (min-width: 1025px) {
+            nav a {
+                font-size: 15px;
+            }
+            a.back-button {
+                width: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'products' %}">Tovarlar</a>
+        <a href="{% url 'sales_page' %}">Sotuv</a>
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+        <a href="{% url 'dashboard' %}">Tushum</a>
+        <a href="{% url 'logout' %}">Chiqish</a>
+    </nav>
+
+    <h2>{{ product.name }}</h2>
+    <p>Asl narxi: {{ product.price }}</p>
+    <p>Sotish narxi: {{ product.selling_price }}</p>
+    <p>Omborda: {{ product.stock }}</p>
+
+    <a href="{% url 'products' %}" class="back-button">Orqaga</a>
+</body>
+</html>

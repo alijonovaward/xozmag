@@ -22,3 +22,7 @@ class ReceiptItem(models.Model):
 
     def __str__(self):
         return f"{self.product_name} x {self.quantity}"
+
+    @property
+    def total(self):
+        return self.price * self.quantity

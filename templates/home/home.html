@@ -2,15 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bosh sahifa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        nav {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        nav a {
+            padding: 8px 14px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: background-color 0.3s ease;
+        }
+        nav a:hover {
+            background-color: #0056b3;
+        }
+        h1 {
+            font-weight: normal;
+            color: #333;
+            margin-top: 10px;
+        }
+        .logout-btn {
+            background-color: #dc3545 !important;
+        }
+        .logout-btn:hover {
+            background-color: #a71d2a !important;
+        }
+
+        /* --- RESPONSIVE QISM --- */
+        @media (max-width: 600px) {
+            nav {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            nav a {
+                text-align: center;
+                font-size: 16px;
+            }
+            h1 {
+                font-size: 20px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
     <nav>
-        <a href="{% url 'products' %}">Products</a> |
-        <a href="{% url 'sales_page' %}">Sales</a> |
-        <a href="{% url 'logout' %}">Logout</a>
+        <a href="{% url 'products' %}">Tovarlar</a>
+        <a href="{% url 'sales_page' %}">Sotuv</a>
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+        <a href="{% url 'dashboard' %}">Tushum</a>
+        <a href="{% url 'logout' %}" class="logout-btn">Chiqish</a>
     </nav>
+
     <h1>Assalomu alaykum, {{ request.user.username }}</h1>
-    <a href="{% url 'logout' %}">Chiqish</a>
 </body>
 </html>

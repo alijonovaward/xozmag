@@ -3,12 +3,99 @@
 {% block title %}Mahsulot qo'shish{% endblock %}
 
 {% block content %}
-    <nav>
-        <a href="{% url 'products' %}">Products</a> |
-        <a href="{% url 'sales_page' %}">Sales</a> |
-        <a href="{% url 'logout' %}">Logout</a> |
-        <a href="{% url 'receipt_list' %}">Cheklar</a>
-    </nav>
+<style>
+    nav {
+        margin-bottom: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    nav a {
+        padding: 8px 14px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 15px;
+        transition: background-color 0.3s ease;
+    }
+    nav a:hover {
+        background-color: #0056b3;
+    }
+    .logout-btn {
+        background-color: #dc3545 !important;
+    }
+    .logout-btn:hover {
+        background-color: #a71d2a !important;
+    }
+
+    h2 {
+        color: #333;
+        font-weight: normal;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    form {
+        max-width: 400px;
+        margin: 0 auto;
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        margin: 8px 0 15px 0;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 14px;
+    }
+    button[type="submit"] {
+        background-color: #007BFF;
+        border: none;
+        color: white;
+        padding: 12px 0;
+        width: 100%;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    button[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+    button[type="submit"]:active {
+        background-color: #003d80;
+    }
+    @media (max-width: 600px) {
+        nav {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        nav a {
+            text-align: center;
+            font-size: 16px;
+        }
+        h2 {
+            font-size: 20px;
+        }
+        form {
+            margin: 10px;
+            padding: 15px;
+        }
+    }
+</style>
+
+<nav>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'logout' %}" class="logout-btn">Chiqish</a>
+</nav>
+
 <h2>Mahsulotni qo'shish</h2>
 
 <form method="post">

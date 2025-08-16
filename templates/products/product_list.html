@@ -1,130 +1,202 @@
-<style>
-  body {
-    background-color: #f9f9f9;
-    font-family: Arial, sans-serif;
-    color: #333;
-    margin: 20px;
-  }
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sizning mahsulotlaringiz</title>
+  <style>
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      color: #333;
+      margin: 20px;
+      max-width: 1000px; /* katta ekranlarda markazlashgan ko‘rinish */
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-  nav a {
-    color: #007BFF;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
+    nav {
+      margin-bottom: 20px;
+      text-align: center;
+    }
 
-  nav a:hover {
-    background-color: #0056b3;
-    color: #fff;
-  }
+    nav a {
+      display: inline-block;
+      background-color: #007bff;
+      color: white;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 15px;
+      margin: 4px 6px;
+      transition: background-color 0.3s ease;
+    }
 
-  h1 {
-    margin-top: 30px;
-    margin-bottom: 15px;
-  }
+    nav a:hover {
+      background-color: #0056b3;
+    }
 
-  a.add-product {
-    display: inline-block;
-    margin-bottom: 20px;
-    background-color: #28a745;
-    color: white;
-    padding: 10px 22px;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
+    h1 {
+      margin-top: 10px;
+      margin-bottom: 15px;
+      font-weight: normal;
+      text-align: center;
+    }
 
-  a.add-product:hover {
-    background-color: #1e7e34;
-  }
+    a.add-product {
+      display: inline-block;
+      margin-bottom: 20px;
+      background-color: #28a745;
+      color: white;
+      padding: 10px 22px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
 
-  ul {
-    list-style-type: none;
-    padding-left: 0;
-  }
+    a.add-product:hover {
+      background-color: #1e7e34;
+    }
 
-  ul li {
-    background-color: white;
-    margin-bottom: 10px;
-    padding: 12px 18px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    font-size: 16px;
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
 
-    display: flex;              /* qatorga joylash */
-    justify-content: space-between; /* oraliqni teng taqsimlash */
-    align-items: center;        /* vertikal markazlash */
-    gap: 15px;                  /* elementlar orasida bo‘sh joy */
-  }
+    ul li {
+      background-color: white;
+      margin-bottom: 10px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 16px;
 
-  .product-info {
-    flex: 1; /* nom va narx bo'limi o'zgaruvchan kenglikda */
-  }
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap; /* kichik ekranda elementlar ustma-ust */
+    }
 
-  .actions {
-    white-space: nowrap; /* tugmalar yonma-yon turadi */
-  }
+    .product-info {
+      flex: 1;
+      min-width: 200px;
+    }
 
-  .actions a {
-    margin-left: 10px;
-  }
+    .actions {
+      white-space: nowrap;
+    }
 
-  ul li a {
-    color: #007BFF;
-    text-decoration: none;
-    font-weight: 600;
-  }
+    .actions a {
+      margin-left: 10px;
+    }
 
-  ul li a:hover {
-    text-decoration: underline;
-  }
+    ul li a {
+      text-decoration: none;
+      font-weight: 600;
+    }
 
-  ul li a.delete {
-    color: #dc3545;
-    font-weight: 700;
-  }
+    ul li a:hover {
+      text-decoration: underline;
+    }
 
-  ul li a.delete:hover {
-    text-decoration: underline;
-    color: #a71d2a;
-  }
+    ul li a.delete {
+      color: #dc3545;
+      font-weight: 700;
+    }
 
-  ul li a.edit {
-    color: #ffc107;
-    font-weight: 700;
-  }
+    ul li a.delete:hover {
+      color: #a71d2a;
+    }
 
-  ul li a.edit:hover {
-    color: #cc9a06;
-    text-decoration: underline;
-  }
-</style>
+    ul li a.edit {
+      color: #ffc107;
+      font-weight: 700;
+    }
 
-    <nav>
-        <a href="{% url 'products' %}">Products</a> |
-        <a href="{% url 'sales_page' %}">Sales</a> |
-        <a href="{% url 'logout' %}">Logout</a> |
-        <a href="{% url 'receipt_list' %}">Cheklar</a>
-    </nav>
+    ul li a.edit:hover {
+      color: #cc9a06;
+    }
 
-<h1>Sizning mahsulotlaringiz</h1>
+    /* --- Telefon (<600px) --- */
+    @media (max-width: 600px) {
+      nav a {
+        display: block;
+        width: 100%;
+        font-size: 16px;
+        margin: 6px 0;
+      }
+      a.add-product {
+        display: block;
+        text-align: center;
+        width: 100%;
+      }
+      ul li {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+        margin-top: 8px;
+      }
+      .actions a {
+        margin-left: 0;
+        margin-right: 15px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+    }
 
-<a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
+    /* --- Planshet (600px–1024px) --- */
+    @media (min-width: 601px) and (max-width: 1024px) {
+      nav a {
+        font-size: 16px;
+        padding: 12px 18px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+    }
 
-<ul>
-  {% for product in products %}
-    <li>
-      <div class="product-info">
-        <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm
-      </div>
-      <div class="actions">
-        <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
-        <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
-      </div>
-    </li>
-  {% empty %}
-    <li>Hozircha mahsulotingiz yo‘q.</li>
-  {% endfor %}
-</ul>
+    /* --- Katta ekran (>1024px) --- */
+    @media (min-width: 1025px) {
+      nav a {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'logout' %}">Chiqish</a>
+  </nav>
+
+  <h1>Sizning mahsulotlaringiz</h1>
+
+  <a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
+
+  <ul>
+    {% for product in products %}
+      <li>
+        <div class="product-info">
+          <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm
+        </div>
+        <div class="actions">
+          <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
+          <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
+        </div>
+      </li>
+    {% empty %}
+      <li>Hozircha mahsulotingiz yo‘q.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

@@ -4,14 +4,172 @@
   <meta charset="UTF-8">
   <title>Cheklar ro‘yxati</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; max-width: 1000px; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #f0f0f0; }
-    button { padding: 6px 12px; margin: 2px; }
-    #receipt-detail { margin-top: 30px; padding: 15px; border: 1px solid #ccc; display: none; }
-    #receipt-detail table { width: 100%; margin-top: 10px; }
-    form input, form select, form button { margin-right: 10px; padding: 5px; }
+    body {
+      background-color: #f9f9f9;
+      font-family: Arial, sans-serif;
+      color: #333;
+      margin: 20px;
+    }
+
+    nav a {
+      color: #007BFF;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    nav a:hover {
+      background-color: #0056b3;
+      color: #fff;
+    }
+
+    h1 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+    }
+
+    form {
+      background-color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    form label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    form input, form select {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      width: 180px;
+      box-sizing: border-box;
+    }
+
+    form button {
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    form button:hover {
+      background-color: #0056b3;
+    }
+
+    form button[type="button"] {
+      background-color: #6c757d;
+    }
+
+    form button[type="button"]:hover {
+      background-color: #565e64;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 700px;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    table button {
+      padding: 6px 12px;
+      font-size: 13px;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    table button:hover {
+      opacity: 0.9;
+    }
+
+    table button:first-child {
+      background-color: #ffc107;
+      color: #000;
+    }
+
+    table button:last-child {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    #receipt-detail {
+      margin-top: 30px;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+      overflow-x: auto;
+    }
+
+    #receipt-detail table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 400px;
+      margin-top: 10px;
+    }
+
+    #receipt-detail th, #receipt-detail td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      font-size: 14px;
+    }
+
+    #receipt-detail th {
+      background-color: #f0f0f0;
+    }
+
+    #receipt-detail button {
+      background-color: #dc3545;
+      border: none;
+      color: white;
+      padding: 8px 18px;
+      font-size: 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    #receipt-detail button:hover {
+      background-color: #a71d2a;
+    }
+
     @media print {
       body * { visibility: hidden; }
       #receipt-detail, #receipt-detail * { visibility: visible; }
@@ -20,76 +178,81 @@
   </style>
 </head>
 <body>
-    <nav>
-        <a href="{% url 'products' %}">Products</a> |
-        <a href="{% url 'sales_page' %}">Sales</a> |
-        <a href="{% url 'logout' %}">Logout</a> |
-        <a href="{% url 'receipt_list' %}">Cheklar</a>
-    </nav>
+  <nav>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'logout' %}">Chiqish</a>
+  </nav>
+
   <h1>Cheklar ro‘yxati</h1>
 
-  <!-- Filter form -->
   <form method="get">
-    <label>Boshlanish sanasi:</label>
-    <input type="date" name="start_date" value="{{ start_date }}">
-
-    <label>Tugash sanasi:</label>
-    <input type="date" name="end_date" value="{{ end_date }}">
-
-    <label>Kimga tegishli:</label>
-    <input type="text" name="description" value="{{ description }}" placeholder="Masalan: Aliyev Oybek">
-
-    <label>Tayyorlik:</label>
-    <select name="ready">
+    <div>
+      <label>Boshlanish sanasi:</label>
+      <input type="date" name="start_date" value="{{ start_date }}">
+    </div>
+    <div>
+      <label>Tugash sanasi:</label>
+      <input type="date" name="end_date" value="{{ end_date }}">
+    </div>
+    <div>
+      <label>Kimga tegishli:</label>
+      <input type="text" name="description" value="{{ description }}" placeholder="Masalan: Aliyev Oybek">
+    </div>
+    <div>
+      <label>Tayyorlik:</label>
+      <select name="ready">
         <option value="">Hammasi</option>
         <option value="true" {% if ready_filter == 'true' %}selected{% endif %}>Tayyor</option>
         <option value="false" {% if ready_filter == 'false' %}selected{% endif %}>Tayyor emas</option>
-    </select>
-
+      </select>
+    </div>
     <button type="submit">Filtrlash</button>
     <button type="button" onclick="window.location.href='{% url 'receipt_list' %}'">Tozalash</button>
   </form>
 
-  <!-- Cheklar jadvali -->
-  <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Vaqt</th>
-        <th>Kimga</th>
-        <th>Jami</th>
-        <th>Tayyorlik</th>
-        <th>Amal</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in receipts %}
-      <tr id="r{{ r.id }}"
-          data-items='[{% for it in r.items.all %}{"name":"{{ it.product_name }}","price":"{{ it.price }}","quantity":"{{ it.quantity }}","total":"{{ it.price|floatformat:2|add:"0" }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'
-          data-total="{{ r.get_total }}"
-          data-description="{{ r.description|default_if_none:'' }}"
-          data-created_at="{{ r.created_at|date:'Y-m-d H:i:s' }}">
-        <td>{{ r.id }}</td>
-        <td>{{ r.created_at|date:"Y-m-d H:i:s" }}</td>
-        <td>{{ r.description|default:"-" }}</td>
-        <td>{{ r.get_total }}</td>
-        <td>
-          <button onclick="toggleReady({{ r.id }}, this)">
-            {% if r.ready %}Tayyor{% else %}Tayyor emas{% endif %}
-          </button>
-        </td>
-        <td>
-          <button onclick="showReceiptDetail({{ r.id }})">Ko‘rish</button>
-          <button onclick="printReceiptInline({{ r.id }})">Chop etish</button>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="6">Hali chek yo‘q</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Vaqt</th>
+          <th>Kimga</th>
+          <th>Jami</th>
+          <th>Tayyorlik</th>
+          <th>Amal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in receipts %}
+        <tr id="r{{ r.id }}"
+            data-items='[{% for it in r.items.all %}{"name":"{{ it.product_name }}","price":"{{ it.price }}","quantity":"{{ it.quantity }}","total":"{{ it.total }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'
+            data-total="{{ r.get_total }}"
+            data-description="{{ r.description|default_if_none:'' }}"
+            data-created_at="{{ r.created_at|date:'Y-m-d H:i:s' }}">
+          <td>{{ r.id }}</td>
+          <td>{{ r.created_at|date:"Y-m-d H:i:s" }}</td>
+          <td>{{ r.description|default:"-" }}</td>
+          <td>{{ r.get_total }}</td>
+          <td>
+            <button onclick="toggleReady({{ r.id }}, this)">
+              {% if r.ready %}Tayyor{% else %}Tayyor emas{% endif %}
+            </button>
+          </td>
+          <td>
+            <button onclick="showReceiptDetail({{ r.id }})">Ko‘rish</button>
+            <button onclick="printReceiptInline({{ r.id }})">Chop etish</button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Hali chek yo‘q</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
-  <!-- Inline detail view -->
   <div id="receipt-detail"></div>
 
   <p><a href="{% url 'sales_page' %}">Savdoga qaytish</a></p>
@@ -97,94 +260,90 @@
   <script>
     let currentDetail = null;
 
-    // Chekni sahifada ko‘rsatish
     function showReceiptDetail(receiptId) {
-        const row = document.getElementById('r' + receiptId);
-        if (!row) return;
+      const row = document.getElementById('r' + receiptId);
+      if (!row) return;
 
-        const itemsData = JSON.parse(row.dataset.items);
-        const total = row.dataset.total;
-        const description = row.dataset.description.trim() || "-";
-        const createdAt = row.dataset.created_at;
+      const itemsData = JSON.parse(row.dataset.items);
+      const total = row.dataset.total;
+      const description = row.dataset.description.trim() || "-";
+      const createdAt = row.dataset.created_at;
 
-        let html = `<h2>Chek #${receiptId}</h2>`;
-        html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
-        html += `<p><b>Kimga:</b> ${description}</p>`;
-        html += `<table border="1" cellspacing="0" cellpadding="5">
-                   <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-        itemsData.forEach(it => {
-          html += `<tr>
-                     <td>${it.name}</td>
-                     <td>${it.price}</td>
-                     <td>${it.quantity}</td>
-                     <td>${it.total}</td>
-                   </tr>`;
-        });
-        html += `</table>`;
-        html += `<p><b>Umumiy summa:</b> ${total}</p>`;
-        html += `<button onclick="cancelDetail()">Bekor qilish</button>`;
+      let html = `<h2>Chek #${receiptId}</h2>`;
+      html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
+      html += `<p><b>Kimga:</b> ${description}</p>`;
+      html += `<table>
+                 <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+      itemsData.forEach(it => {
+        html += `<tr>
+                   <td>${it.name}</td>
+                   <td>${it.price}</td>
+                   <td>${it.quantity}</td>
+                   <td>${it.total}</td>
+                 </tr>`;
+      });
+      html += `</table>`;
+      html += `<p><b>Umumiy summa:</b> ${total}</p>`;
+      html += `<button onclick="cancelDetail()">Bekor qilish</button>`;
 
-        const detailDiv = document.getElementById('receipt-detail');
-        detailDiv.innerHTML = html;
-        detailDiv.style.display = 'block';
-        detailDiv.scrollIntoView({behavior: "smooth"});
+      const detailDiv = document.getElementById('receipt-detail');
+      detailDiv.innerHTML = html;
+      detailDiv.style.display = 'block';
+      detailDiv.scrollIntoView({behavior: "smooth"});
 
-        currentDetail = receiptId;
+      currentDetail = receiptId;
     }
 
-    // Chekni yashirish
     function cancelDetail() {
-        const detailDiv = document.getElementById('receipt-detail');
-        detailDiv.style.display = 'none';
-        detailDiv.innerHTML = '';
-        currentDetail = null;
+      const detailDiv = document.getElementById('receipt-detail');
+      detailDiv.style.display = 'none';
+      detailDiv.innerHTML = '';
+      currentDetail = null;
     }
 
-    // Chop etish tugmasi
     function printReceiptInline(receiptId) {
-        const row = document.getElementById('r' + receiptId);
-        if (!row) return;
+      const row = document.getElementById('r' + receiptId);
+      if (!row) return;
 
-        const itemsData = JSON.parse(row.dataset.items);
-        const total = row.dataset.total;
-        const description = row.dataset.description.trim() || "-";
-        const createdAt = row.dataset.created_at;
+      const itemsData = JSON.parse(row.dataset.items);
+      const total = row.dataset.total;
+      const description = row.dataset.description.trim() || "-";
+      const createdAt = row.dataset.created_at;
 
-        let html = `<h2>Chek #${receiptId}</h2>`;
-        html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
-        html += `<p><b>Kimga:</b> ${description}</p>`;
-        html += `<table border="1" cellspacing="0" cellpadding="5">
-                   <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-        itemsData.forEach(it => {
-            html += `<tr>
-                        <td>${it.name}</td>
-                        <td>${it.price}</td>
-                        <td>${it.quantity}</td>
-                        <td>${it.total}</td>
-                     </tr>`;
-        });
-        html += `</table>`;
-        html += `<p><b>Umumiy summa:</b> ${total}</p>`;
+      let html = `<h2>Chek #${receiptId}</h2>`;
+      html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
+      html += `<p><b>Kimga:</b> ${description}</p>`;
+      html += `<table>
+                 <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+      itemsData.forEach(it => {
+          html += `<tr>
+                      <td>${it.name}</td>
+                      <td>${it.price}</td>
+                      <td>${it.quantity}</td>
+                      <td>${it.total}</td>
+                   </tr>`;
+      });
+      html += `</table>`;
+      html += `<p><b>Umumiy summa:</b> ${total}</p>`;
 
-        const detailDiv = document.getElementById('receipt-detail');
-        detailDiv.innerHTML = html;
-        detailDiv.style.display = 'block';
+      const detailDiv = document.getElementById('receipt-detail');
+      detailDiv.innerHTML = html;
+      detailDiv.style.display = 'block';
 
-        window.print();
+      window.print();
     }
 
-    // Tayyorlikni toggle qilish
     function toggleReady(receiptId, btn) {
-        fetch("{% url 'toggle_ready' 0 %}".replace('0', receiptId), {
-            method: "POST",
-            headers: { "X-CSRFToken": "{{ csrf_token }}" },
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success){
-                btn.innerText = data.ready ? 'Tayyor' : 'Tayyor emas';
-            }
-        });
+      fetch("{% url 'toggle_ready' 0 %}".replace('0', receiptId), {
+          method: "POST",
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
+      })
+      .then(response => response.json())
+      .then(data => {
+          if(data.success){
+              btn.innerText = data.ready ? 'Tayyor' : 'Tayyor emas';
+          }
+      });
     }
   </script>
 </body>
