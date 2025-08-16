@@ -3,6 +3,12 @@
 {% block title %}Mahsulot qo'shish{% endblock %}
 
 {% block content %}
+    <nav>
+        <a href="{% url 'products' %}">Products</a> |
+        <a href="{% url 'sales_page' %}">Sales</a> |
+        <a href="{% url 'logout' %}">Logout</a> |
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+    </nav>
 <h2>Mahsulotni qo'shish</h2>
 
 <form method="post">

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <title>Statistika</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    form input, form button { margin-right: 10px; padding: 5px; }
+  </style>
+</head>
+<body>
+<h1>Cheklar statistika</h1>
+
+<!-- Filter form -->
+<form method="get">
+    <label>Boshlanish sanasi:</label>
+    <input type="date" name="start_date" value="{{ start_date }}">
+    <label>Tugash sanasi:</label>
+    <input type="date" name="end_date" value="{{ end_date }}">
+    <button type="submit">Filtrlash</button>
+    <button type="button" onclick="window.location.href='{% url 'dashboard' %}'">Tozalash</button>
+</form>
+
+<h2>Bugungi cheklar</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Receipt ID</th>
+            <th>Mahsulot</th>
+            <th>Miqdor</th>
+            <th>Sotish narxi</th>
+            <th>Kelgan narxi</th>
+            <th>Foyda</th>
+            <th>Jami</th>
+            <th>Vaqt</th>
+            <th>Kimga</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for it in today_items %}
+        <tr>
+            <td>{{ it.receipt_id }}</td>
+            <td>{{ it.product_name }}</td>
+            <td>{{ it.quantity }}</td>
+            <td>{{ it.selling_price }}</td>
+            <td>{{ it.cost_price }}</td>
+            <td>{{ it.plus }}</td>
+            <td>{{ it.item_total }}</td>
+            <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ it.description|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">Bugungi chek yo‘q</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><b>Bugungi jami summa:</b> {{ today_total }}</p>
+<p><b>Bugungi jami foyda:</b> {{ today_plus }}</p>
+
+
+<h2>Filtrlangan cheklar</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Receipt ID</th>
+            <th>Mahsulot</th>
+            <th>Miqdor</th>
+            <th>Sotish narxi</th>
+            <th>Kelgan narxi</th>
+            <th>Foyda</th>
+            <th>Jami</th>
+            <th>Vaqt</th>
+            <th>Kimga</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for it in filtered_items %}
+        <tr>
+            <td>{{ it.receipt_id }}</td>
+            <td>{{ it.product_name }}</td>
+            <td>{{ it.quantity }}</td>
+            <td>{{ it.selling_price }}</td>
+            <td>{{ it.cost_price }}</td>
+            <td>{{ it.plus }}</td>
+            <td>{{ it.item_total }}</td>
+            <td>{{ it.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td>{{ it.description|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8">Chek yo‘q</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<p><b>Filtrlangan jami summa:</b> {{ filtered_total }}</p>
+<p><b>Filtrlangan jami foyda:</b> {{ total_plus }}</p>
+</body>
+</html>

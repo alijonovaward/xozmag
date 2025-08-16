@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <title>Cheklar ro‘yxati</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 1000px; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    button { padding: 6px 12px; margin: 2px; }
+    #receipt-detail { margin-top: 30px; padding: 15px; border: 1px solid #ccc; display: none; }
+    #receipt-detail table { width: 100%; margin-top: 10px; }
+    form input, form select, form button { margin-right: 10px; padding: 5px; }
+    @media print {
+      body * { visibility: hidden; }
+      #receipt-detail, #receipt-detail * { visibility: visible; }
+      #receipt-detail { position: absolute; top: 0; left: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'products' %}">Products</a> |
+        <a href="{% url 'sales_page' %}">Sales</a> |
+        <a href="{% url 'logout' %}">Logout</a> |
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+    </nav>
+  <h1>Cheklar ro‘yxati</h1>
+
+  <!-- Filter form -->
+  <form method="get">
+    <label>Boshlanish sanasi:</label>
+    <input type="date" name="start_date" value="{{ start_date }}">
+
+    <label>Tugash sanasi:</label>
+    <input type="date" name="end_date" value="{{ end_date }}">
+
+    <label>Kimga tegishli:</label>
+    <input type="text" name="description" value="{{ description }}" placeholder="Masalan: Aliyev Oybek">
+
+    <label>Tayyorlik:</label>
+    <select name="ready">
+        <option value="">Hammasi</option>
+        <option value="true" {% if ready_filter == 'true' %}selected{% endif %}>Tayyor</option>
+        <option value="false" {% if ready_filter == 'false' %}selected{% endif %}>Tayyor emas</option>
+    </select>
+
+    <button type="submit">Filtrlash</button>
+    <button type="button" onclick="window.location.href='{% url 'receipt_list' %}'">Tozalash</button>
+  </form>
+
+  <!-- Cheklar jadvali -->
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Vaqt</th>
+        <th>Kimga</th>
+        <th>Jami</th>
+        <th>Tayyorlik</th>
+        <th>Amal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in receipts %}
+      <tr id="r{{ r.id }}"
+          data-items='[{% for it in r.items.all %}{"name":"{{ it.product_name }}","price":"{{ it.price }}","quantity":"{{ it.quantity }}","total":"{{ it.price|floatformat:2|add:"0" }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'
+          data-total="{{ r.get_total }}"
+          data-description="{{ r.description|default_if_none:'' }}"
+          data-created_at="{{ r.created_at|date:'Y-m-d H:i:s' }}">
+        <td>{{ r.id }}</td>
+        <td>{{ r.created_at|date:"Y-m-d H:i:s" }}</td>
+        <td>{{ r.description|default:"-" }}</td>
+        <td>{{ r.get_total }}</td>
+        <td>
+          <button onclick="toggleReady({{ r.id }}, this)">
+            {% if r.ready %}Tayyor{% else %}Tayyor emas{% endif %}
+          </button>
+        </td>
+        <td>
+          <button onclick="showReceiptDetail({{ r.id }})">Ko‘rish</button>
+          <button onclick="printReceiptInline({{ r.id }})">Chop etish</button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6">Hali chek yo‘q</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Inline detail view -->
+  <div id="receipt-detail"></div>
+
+  <p><a href="{% url 'sales_page' %}">Savdoga qaytish</a></p>
+
+  <script>
+    let currentDetail = null;
+
+    // Chekni sahifada ko‘rsatish
+    function showReceiptDetail(receiptId) {
+        const row = document.getElementById('r' + receiptId);
+        if (!row) return;
+
+        const itemsData = JSON.parse(row.dataset.items);
+        const total = row.dataset.total;
+        const description = row.dataset.description.trim() || "-";
+        const createdAt = row.dataset.created_at;
+
+        let html = `<h2>Chek #${receiptId}</h2>`;
+        html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
+        html += `<p><b>Kimga:</b> ${description}</p>`;
+        html += `<table border="1" cellspacing="0" cellpadding="5">
+                   <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+        itemsData.forEach(it => {
+          html += `<tr>
+                     <td>${it.name}</td>
+                     <td>${it.price}</td>
+                     <td>${it.quantity}</td>
+                     <td>${it.total}</td>
+                   </tr>`;
+        });
+        html += `</table>`;
+        html += `<p><b>Umumiy summa:</b> ${total}</p>`;
+        html += `<button onclick="cancelDetail()">Bekor qilish</button>`;
+
+        const detailDiv = document.getElementById('receipt-detail');
+        detailDiv.innerHTML = html;
+        detailDiv.style.display = 'block';
+        detailDiv.scrollIntoView({behavior: "smooth"});
+
+        currentDetail = receiptId;
+    }
+
+    // Chekni yashirish
+    function cancelDetail() {
+        const detailDiv = document.getElementById('receipt-detail');
+        detailDiv.style.display = 'none';
+        detailDiv.innerHTML = '';
+        currentDetail = null;
+    }
+
+    // Chop etish tugmasi
+    function printReceiptInline(receiptId) {
+        const row = document.getElementById('r' + receiptId);
+        if (!row) return;
+
+        const itemsData = JSON.parse(row.dataset.items);
+        const total = row.dataset.total;
+        const description = row.dataset.description.trim() || "-";
+        const createdAt = row.dataset.created_at;
+
+        let html = `<h2>Chek #${receiptId}</h2>`;
+        html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
+        html += `<p><b>Kimga:</b> ${description}</p>`;
+        html += `<table border="1" cellspacing="0" cellpadding="5">
+                   <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+        itemsData.forEach(it => {
+            html += `<tr>
+                        <td>${it.name}</td>
+                        <td>${it.price}</td>
+                        <td>${it.quantity}</td>
+                        <td>${it.total}</td>
+                     </tr>`;
+        });
+        html += `</table>`;
+        html += `<p><b>Umumiy summa:</b> ${total}</p>`;
+
+        const detailDiv = document.getElementById('receipt-detail');
+        detailDiv.innerHTML = html;
+        detailDiv.style.display = 'block';
+
+        window.print();
+    }
+
+    // Tayyorlikni toggle qilish
+    function toggleReady(receiptId, btn) {
+        fetch("{% url 'toggle_ready' 0 %}".replace('0', receiptId), {
+            method: "POST",
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success){
+                btn.innerText = data.ready ? 'Tayyor' : 'Tayyor emas';
+            }
+        });
+    }
+  </script>
+</body>
+</html>

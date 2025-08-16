@@ -1,145 +1,228 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sotuv</title>
+  <meta charset="UTF-8">
+  <title>Savdo sahifasi</title>
   <style>
-    table { border-collapse: collapse; width: 100%; max-width: 800px }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left }
-    #resultList li { margin: 8px 0 }
-    form.inline { display: inline-flex; gap: 6px; align-items: center; margin-left: 8px }
-    input[name="quantity"] { width: 80px }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; max-width: 800px; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    #search-results div {
+      padding: 5px; cursor: pointer; border-bottom: 1px solid #eee;
+    }
+    #search-results div:hover { background: #f9f9f9; }
+    .cart-header { margin-top: 30px; }
+    button { padding: 6px 12px; }
+    input.qty-input { width: 50px; }
+    #receipt-description { width: 300px; margin-top: 10px; padding: 5px; }
   </style>
+  <script>
+    let CSRF_TOKEN = '{{ csrf_token }}';
+
+    function searchProduct() {
+      const searchInput = document.getElementById("search");
+      const q = searchInput.value.trim();
+      if (!q) {
+        document.getElementById("search-results").innerHTML = "";
+        return;
+      }
+      fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+          let html = "";
+          data.results.forEach(p => {
+            html += `
+              <div>
+                ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
+                <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
+                <button onclick="addToCart(${p.id})">Qo‘shish</button>
+              </div>`;
+          });
+          const resultsDiv = document.getElementById("search-results");
+          resultsDiv.innerHTML = html;
+          searchInput.focus();  // focusni saqlash
+        });
+    }
+
+    function addToCart(productId) {
+      const qtyInput = document.getElementById("qty_" + productId);
+      const qty = qtyInput ? qtyInput.value : 1;
+      const formData = new FormData();
+      formData.append("quantity", qty);
+
+      fetch(`/sales/add/${productId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          renderCart(data.cart);
+
+          // Search input va natijalarni tozalash
+          const searchInput = document.getElementById("search");
+          searchInput.value = "";
+          document.getElementById("search-results").innerHTML = "";
+          searchInput.focus();  // input focusni qaytarish
+
+          // Mahsulot miqdori inputini default 1 ga qaytarish
+          if(qtyInput) qtyInput.value = 1;
+
+        } else {
+          alert(data.error || "Xatolik");
+        }
+      });
+    }
+
+    function removeFromCart(productId) {
+      fetch(`/sales/remove/${productId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          renderCart(data.cart);
+        } else {
+          alert(data.error || "O‘chirishda xatolik");
+        }
+      });
+    }
+
+    function renderCart(cart) {
+      const tbody = document.getElementById("cart-body");
+      tbody.innerHTML = "";
+      let total = 0;
+      for (let pid in cart) {
+        const item = cart[pid];
+        const rowTotal = parseFloat(item.price) * parseFloat(item.quantity);
+        total += rowTotal;
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.price}</td>
+            <td>${item.quantity}</td>
+            <td>${rowTotal.toFixed(2)}</td>
+            <td><button onclick="removeFromCart(${pid})">O‘chirish</button></td>
+          </tr>`;
+      }
+      document.getElementById("cart-total").innerText = total.toFixed(2);
+    }
+
+    function closeCart() {
+      const description = document.getElementById("receipt-description").value;
+      const formData = new FormData();
+      formData.append("description", description);
+
+      fetch("/sales/cart/close/", {
+          method: "POST",
+          headers: { "X-CSRFToken": CSRF_TOKEN },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              const now = new Date();
+              const timeStr = now.toLocaleTimeString("uz-UZ", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                  hour12: false
+              });
+
+              let html = `<h2>Chek</h2>`;
+              html += `<p>Vaqt: ${timeStr}</p>`;
+              html += `<p>Kimga: ${description || "-"}</p>`;
+              html += `<table border="1" cellspacing="0" cellpadding="5">
+                        <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+              data.items.forEach(it => {
+                  html += `<tr>
+                            <td>${it.name}</td>
+                            <td>${it.price}</td>
+                            <td>${it.quantity}</td>
+                            <td>${it.total}</td>
+                          </tr>`;
+              });
+              html += `</table>`;
+              html += `<p><b>Umumiy:</b> ${data.total}</p>`;
+
+              // Print div
+              let printDiv = document.getElementById('print-div');
+              if (!printDiv) {
+                  printDiv = document.createElement('div');
+                  printDiv.id = 'print-div';
+                  printDiv.style.display = 'none';
+                  document.body.appendChild(printDiv);
+              }
+              printDiv.innerHTML = html;
+
+              // Print qilish
+              const originalContents = document.body.innerHTML;
+              document.body.innerHTML = printDiv.innerHTML;
+              window.print();
+              document.body.innerHTML = originalContents;
+              location.reload();
+          } else {
+              alert("Korzinkani yopishda xatolik");
+          }
+      });
+    }
+  </script>
 </head>
 <body>
-  <h1>Sotuv sahifasi</h1>
+    <nav>
+        <a href="{% url 'products' %}">Products</a> |
+        <a href="{% url 'sales_page' %}">Sales</a> |
+        <a href="{% url 'logout' %}">Logout</a> |
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+    </nav>
+  <h1>Savdo sahifasi</h1>
+  <input type="text" id="search" placeholder="Mahsulot qidirish..." onkeyup="searchProduct()">
+  <div id="search-results"></div>
 
-  <input type="text" id="searchBox" placeholder="Mahsulot nomi..." autocomplete="off" />
-  <ul id="resultList"></ul>
+  <div class="cart-header">
+    <h2>Korzinka</h2>
 
-  <h2>Korzinka</h2>
-  <div id="cartBlock">
-    {% if rows %}
-      <table>
+    <label for="receipt-description">Chek kimga tegishli?</label><br>
+    <input type="text" id="receipt-description" placeholder="Masalan: Aliyev Oybek"><br>
+
+    <table>
+      <thead>
         <tr>
           <th>Mahsulot</th>
           <th>Narx</th>
           <th>Miqdor</th>
           <th>Jami</th>
-          <th></th>
+          <th>Amal</th>
         </tr>
+      </thead>
+      <tbody id="cart-body">
         {% for r in rows %}
         <tr>
           <td>{{ r.name }}</td>
           <td>{{ r.price }}</td>
           <td>{{ r.quantity }}</td>
           <td>{{ r.total }}</td>
-          <td><button onclick="removeFromCart('{{ r.id }}')">O'chirish</button></td>
+          <td><button onclick="removeFromCart({{ r.id }})">O‘chirish</button></td>
         </tr>
         {% endfor %}
-      </table>
-      <p><a href="{% url 'close_cart' %}">Korzinkani yopish</a></p>
-    {% else %}
-      <p>Korzinka bo'sh</p>
-    {% endif %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3"><b>Umumiy</b></td>
+          <td colspan="2"><b id="cart-total">0</b></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <button onclick="closeCart()">Korzinkani yopish</button>
+    <p><a href="{% url 'receipt_list' %}">Cheklar ro‘yxatini ko‘rish</a></p>
   </div>
 
-  {% csrf_token %}
-
   <script>
-    const CSRF_TOKEN = '{{ csrf_token }}';
-
-    function renderCart(cart) {
-      let html = '';
-      const keys = Object.keys(cart || {});
-      if (keys.length) {
-        html += `<table>
-          <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th><th></th></tr>`;
-        keys.forEach(id => {
-          const item = cart[id];
-          const price = parseFloat(item.price) || 0;
-          const qty = parseFloat(item.quantity) || 0;
-          const total = (price * qty).toFixed(2);
-          html += `<tr>
-            <td>${item.name}</td>
-            <td>${price}</td>
-            <td>${qty}</td>
-            <td>${total}</td>
-            <td><button onclick="removeFromCart('${id}')">O'chirish</button></td>
-          </tr>`;
-        });
-        html += `</table>
-                 <p><a href="/sales/cart/close/">Korzinkani yopish</a></p>`;
-      } else {
-        html = `<p>Korzinka bo'sh</p>`;
-      }
-      document.getElementById('cartBlock').innerHTML = html;
-    }
-
-    function removeFromCart(productId) {
-      fetch(`/sales/remove/${productId}/`, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': CSRF_TOKEN }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) renderCart(data.cart);
-        else alert("O'chirishda xatolik: " + (data.error || 'noma’lum'));
-      })
-      .catch(() => alert("Tarmoq xatosi"));
-    }
-
-    document.getElementById('searchBox').addEventListener('input', function () {
-      const query = this.value;
-      fetch(`/sales/api/search/?q=${encodeURIComponent(query)}`)
-        .then(r => r.json())
-        .then(data => {
-          const list = document.getElementById('resultList');
-          list.innerHTML = '';
-          (data.results || []).forEach(p => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-              ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
-              <form class="inline" onsubmit="addToCart(event, ${p.id})">
-                <input type="text" name="quantity" inputmode="decimal" pattern="\\d+([\\.,]\\d+)?" value="1" />
-                <button type="submit">Qo'shish</button>
-              </form>`;
-            list.appendChild(li);
-          });
-        });
-    });
-
-    function addToCart(evt, productId) {
-      evt.preventDefault();
-      let q = evt.target.quantity.value.trim();
-      q = q.replace(',', '.');
-      if (!q || isNaN(q) || Number(q) <= 0) {
-        alert('Miqdor noto‘g‘ri');
-        return;
-      }
-      const body = new URLSearchParams({ quantity: q }).toString();
-
-      fetch(`/sales/add/${productId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': CSRF_TOKEN,
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          renderCart(data.cart);
-          evt.target.quantity.value = '';                 // miqdor inputini tozalash
-          document.getElementById('searchBox').value = ''; // qidiruvni tozalash
-          document.getElementById('resultList').innerHTML = ''; // natijalar ro‘yxatini tozalash
-        } else {
-          alert('Qo‘shishda xatolik: ' + (data.error || 'noma’lum'));
-        }
-      })
-      .catch(() => alert('Tarmoq xatosi'));
-    }
+    renderCart({{ cart|safe }});
   </script>
 </body>
 </html>

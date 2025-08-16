@@ -102,10 +102,12 @@
   }
 </style>
 
-<nav>
-  <a href="{% url 'products' %}">Products</a> |
-  <a href="{% url 'logout' %}">Logout</a>
-</nav>
+    <nav>
+        <a href="{% url 'products' %}">Products</a> |
+        <a href="{% url 'sales_page' %}">Sales</a> |
+        <a href="{% url 'logout' %}">Logout</a> |
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+    </nav>
 
 <h1>Sizning mahsulotlaringiz</h1>
 

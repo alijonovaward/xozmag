@@ -6,14 +6,13 @@ from django.contrib.auth.decorators import login_required
 from products.models import Product
 from .models import Receipt, ReceiptItem
 
+# ==============================
+# Savdo sahifasi
+# ==============================
 @login_required
 def sales_page(request):
-    """
-    Boshlang'ich sahifani chizamiz. Sessiondagi 'cart' JSON-serializable bo'lishi kerak
-    (faqat str/float/int/bool/list/dict). Shuning uchun float saqlaymiz.
-    """
+    """Foydalanuvchining hozirgi korzinkasini ko'rsatish"""
     cart = request.session.get('cart', {})
-    # Boshlang'ich render uchun jami hisoblab beramiz (template’da ko‘rsatish uchun)
     rows = []
     for pid, item in cart.items():
         price = float(item['price'])
@@ -27,15 +26,16 @@ def sales_page(request):
         })
     return render(request, 'sale/sales.html', {'cart': cart, 'rows': rows})
 
+# ==============================
+# Mahsulot qidiruv API
+# ==============================
 @login_required
 def product_search_api(request):
+    """Qidiruv so‘rovi bo‘yicha mahsulotlarni JSON formatida qaytarish"""
     q = request.GET.get('q', '').strip()
     profile = request.user.profile
-
-    # Agar input bo'sh bo'lsa, hech narsa qaytarmaymiz
     if not q:
         return JsonResponse({'results': []})
-
     products = Product.objects.filter(profile=profile, name__icontains=q)[:10]
     data = [
         {
@@ -48,31 +48,24 @@ def product_search_api(request):
     ]
     return JsonResponse({'results': data})
 
-
+# ==============================
+# Korzinkaga mahsulot qo'shish
+# ==============================
 @login_required
 @require_POST
 def add_to_cart(request, product_id):
-    """
-    Quantity ni foydalanuvchi nuqta yoki vergul bilan kiritsa ham qabul qilamiz.
-    Sessiyaga faqat float saqlaymiz (Decimal yo'q) — aks holda JSON serialize xatosi bo'ladi.
-    """
     product = get_object_or_404(Product, id=product_id)
-
     raw_qty = (request.POST.get('quantity') or '1').strip()
-    # Vergulni nuqtaga almashtiramiz
     raw_qty = raw_qty.replace(',', '.')
     try:
         quantity = Decimal(raw_qty)
     except (InvalidOperation, TypeError):
         return JsonResponse({'success': False, 'error': 'Noto‘g‘ri miqdor'}, status=400)
-
     if quantity <= 0:
         return JsonResponse({'success': False, 'error': 'Miqdor > 0 bo‘lishi kerak'}, status=400)
 
     cart = request.session.get('cart', {})
     pid = str(product.id)
-
-    # Sessiyada faqat float saqlaymiz
     if pid in cart:
         cart[pid]['quantity'] = float(cart[pid]['quantity']) + float(quantity)
     else:
@@ -81,10 +74,12 @@ def add_to_cart(request, product_id):
             'price': float(product.selling_price),
             'quantity': float(quantity),
         }
-
     request.session['cart'] = cart
     return JsonResponse({'success': True, 'cart': cart})
 
+# ==============================
+# Korzinkadan mahsulot o'chirish
+# ==============================
 @login_required
 @require_POST
 def remove_from_cart(request, product_id):
@@ -96,17 +91,29 @@ def remove_from_cart(request, product_id):
         return JsonResponse({'success': True, 'cart': cart})
     return JsonResponse({'success': False, 'error': 'Mahsulot topilmadi'}, status=404)
 
+# ==============================
+# Korzinkani yopish va chek yaratish
+# ==============================
 @login_required
+@require_POST
 def close_cart(request):
-    """
-    Chek yaratamiz, stockni kamaytiramiz. Bu yerda Decimal bilan ishlaymiz,
-    lekin sessiyadan o‘qiganimiz float — shuni Decimal ga aylantirib olamiz.
-    """
+    """Korzinkani yopadi va Receipt + ReceiptItem larni yaratadi"""
     cart = request.session.get('cart', {})
     if not cart:
-        return redirect('sales_page')
+        return JsonResponse({'success': False, 'error': 'Korzinka bo‘sh'})
 
-    receipt = Receipt.objects.create(user=request.user)
+    # Inputdan kelayotgan kimga tegishli ekanini olish
+    description = request.POST.get('description', '').strip()
+
+    # Receipt yaratish
+    receipt = Receipt.objects.create(
+        user=request.user,
+        description=description
+    )
+
+    items_data = []
+    total = Decimal('0.00')
+
     for pid, item in cart.items():
         product = Product.objects.get(id=int(pid))
         qty = Decimal(str(item['quantity']))
@@ -116,7 +123,7 @@ def close_cart(request):
         product.stock -= qty
         product.save()
 
-        # Chek item
+        # ReceiptItem yaratish
         ReceiptItem.objects.create(
             receipt=receipt,
             product_name=item['name'],
@@ -124,6 +131,59 @@ def close_cart(request):
             quantity=qty,
         )
 
-    # Sessiyani tozalaymiz
+        total += price * qty
+        items_data.append({
+            'name': item['name'],
+            'price': str(price),
+            'quantity': str(qty),
+            'total': str(price * qty)
+        })
+
+    # Session korzinkani tozalash
     request.session['cart'] = {}
-    return redirect('sales_page')
+
+    return JsonResponse({'success': True, 'items': items_data, 'total': str(total)})
+
+# ==============================
+# Cheklar ro'yxati
+# ==============================
+@login_required
+def receipt_list(request):
+    """Foydalanuvchi tomonidan yaratilgan cheklar ro'yxati filtrlash bilan"""
+    receipts = Receipt.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
+
+    # Vaqt bo'yicha filter
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+    if start_date:
+        receipts = receipts.filter(created_at__date__gte=start_date)
+    if end_date:
+        receipts = receipts.filter(created_at__date__lte=end_date)
+
+    # Description bo'yicha filter
+    description = request.GET.get('description')
+    if description:
+        receipts = receipts.filter(description__icontains=description)
+
+    ready_filter = request.GET.get('ready')
+    if ready_filter in ['true', 'false']:
+        receipts = receipts.filter(ready=(ready_filter == 'true'))
+
+    context = {
+        'receipts': receipts,
+        'start_date': start_date or '',
+        'end_date': end_date or '',
+        'description': description or '',
+        'ready_filter': ready_filter or '',
+    }
+
+    return render(request, 'sale/receipts.html', context)
+
+@login_required
+@require_POST
+def toggle_ready(request, receipt_id):
+    """Receipt ready status ni toggle qiladi"""
+    receipt = get_object_or_404(Receipt, id=receipt_id, user=request.user)
+    receipt.ready = not receipt.ready
+    receipt.save()
+    return JsonResponse({'success': True, 'ready': receipt.ready})
