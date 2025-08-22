@@ -45,6 +45,13 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('products')
 
     def form_valid(self, form):
-        # Saqlashdan oldin productga hozirgi user profilini bog'laymiz
-        form.instance.profile = self.request.user.profile
+        # Avvaldan mavjud mahsulotni tekshirish
+        user_profile = self.request.user.profile
+        name = form.cleaned_data['name']
+        if Product.objects.filter(profile=user_profile, name__iexact=name).exists():
+            form.add_error('name', 'Bu nomdagi mahsulot allaqachon mavjud!')
+            return self.form_invalid(form)
+
+        # Profilni bog‘lash
+        form.instance.profile = user_profile
         return super().form_valid(form)

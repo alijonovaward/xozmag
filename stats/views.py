@@ -1,70 +1,84 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from datetime import datetime
 from sale.models import Receipt, ReceiptItem
-from products.models import Product  # Product import
+from products.models import Product
 
 @login_required
 def dashboard(request):
     user = request.user
 
-    # Vaqt bo‘yicha filter
+    # Sana bo‘yicha filter
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
-    receipts = Receipt.objects.filter(user=user).prefetch_related('items').order_by('-created_at')
+    # Foydalanuvchiga tegishli barcha receipts
+    all_receipts = Receipt.objects.filter(user=user).prefetch_related('items').order_by('-created_at')
 
+    # Filterlangan receipts
+    filtered_receipts = all_receipts
     if start_date:
-        receipts = receipts.filter(created_at__date__gte=start_date)
+        filtered_receipts = filtered_receipts.filter(created_at__date__gte=start_date)
     if end_date:
-        receipts = receipts.filter(created_at__date__lte=end_date)
+        filtered_receipts = filtered_receipts.filter(created_at__date__lte=end_date)
 
-    # Bugungi cheklar
+    # Bugungi receipts (har doim bugungi sana)
     today = timezone.localdate()
-    today_receipts = receipts.filter(created_at__date=today)
+    today_receipts = all_receipts.filter(created_at__date=today)
 
-    # Jami summalarni hisoblash
-    def get_receipt_items_with_prices(qs):
-        items_list = []
+    # Product bo‘yicha aggregate qilish funksiyasi
+    def aggregate_receipts(qs):
+        product_stats = {}
         total_sum = 0
-        total_plus = 0
+        total_profit = 0
         for r in qs:
             for item in r.items.all():
                 try:
                     product = Product.objects.get(name=item.product_name, profile=user.profile)
                     selling_price = float(product.selling_price)
-                    cost_price = float(getattr(product, 'price', 0))  # agar cost price kerak bo‘lsa
+                    cost_price = float(getattr(product, 'price', 0))
                 except Product.DoesNotExist:
                     selling_price = float(item.price)
                     cost_price = 0
                 item_total = selling_price * float(item.quantity)
-                total_sum += item_total
-                plus = (selling_price - cost_price) * float(item.quantity)
-                total_plus += plus
-                items_list.append({
-                    'receipt_id': r.id,
-                    'product_name': item.product_name,
-                    'quantity': item.quantity,
-                    'selling_price': selling_price,
-                    'cost_price': cost_price,
-                    'item_total': item_total,
-                    'description': r.description,
-                    'created_at': r.created_at,
-                    'plus':plus
-                })
-        return items_list, total_sum, total_plus
+                profit = (selling_price - cost_price) * float(item.quantity)
 
-    today_items, today_total, today_plus = get_receipt_items_with_prices(today_receipts)
-    filtered_items, filtered_total, total_plus = get_receipt_items_with_prices(receipts)
+                total_sum += item_total
+                total_profit += profit
+
+                if item.product_name not in product_stats:
+                    product_stats[item.product_name] = {
+                        'quantity': 0,
+                        'total_sales': 0,
+                        'total_profit': 0
+                    }
+                product_stats[item.product_name]['quantity'] += item.quantity
+                product_stats[item.product_name]['total_sales'] += item_total
+                product_stats[item.product_name]['total_profit'] += profit
+
+        # Dictni listga o‘tkazish
+        product_list = []
+        for name, stats in product_stats.items():
+            product_list.append({
+                'product_name': name,
+                'quantity': stats['quantity'],
+                'total_sales': stats['total_sales'],
+                'total_profit': stats['total_profit']
+            })
+
+        return product_list, total_sum, total_profit
+
+    # Bugungi va filterlangan aggregate
+    today_products, today_total, today_profit = aggregate_receipts(today_receipts)
+    filtered_products, filtered_total, filtered_profit = aggregate_receipts(filtered_receipts)
 
     context = {
-        'today_items': today_items,
+        'today_products': today_products,
         'today_total': today_total,
-        'today_plus': today_plus,
-        'filtered_items': filtered_items,
+        'today_profit': today_profit,
+        'filtered_products': filtered_products,
         'filtered_total': filtered_total,
-        'total_plus': total_plus,
+        'filtered_profit': filtered_profit,
         'start_date': start_date or '',
         'end_date': end_date or '',
     }

@@ -188,7 +188,7 @@
     {% for product in products %}
       <li>
         <div class="product-info">
-          <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm
+          <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm ({{ product.stock }} birlik)
         </div>
         <div class="actions">
           <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
