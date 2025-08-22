@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Tovarni qaytarish</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        nav {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        nav a {
+            color: #007BFF;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        nav a:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+        .form-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .form-card h2 {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+        .top-link {
+            display: inline-block;
+            margin-bottom: 10px;
+            background-color: #6c757d;
+            color: white;
+            padding: 8px 14px;
+            font-size: 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .top-link:hover {
+            background-color: #5a6268;
+        }
+        .form-card form p {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .form-card button {
+            width: 100%;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 0;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .form-card button:hover {
+            background-color: #0056b3;
+        }
+        @media (max-width: 768px) {
+            body { margin: 10px; }
+            nav { gap: 6px; }
+            nav a { padding: 6px 10px; font-size: 14px; }
+            .form-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'products' %}">Tovarlar</a>
+        <a href="{% url 'sales_page' %}">Sotuv</a>
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+        <a href="{% url 'dashboard' %}">Tushum</a>
+        <a href="{% url 'return_page' %}">Qaytarish</a>
+        <a href="{% url 'logout' %}">Chiqish</a>
+    </nav>
+    <div class="form-card">
+        <a href="{% url 'returned_list' %}" class="top-link">Qaytgan tovarlar</a>
+        <h2>Tovarni qaytarish</h2>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Qaytarish</button>
+        </form>
+    </div>
+</body>
+</html>

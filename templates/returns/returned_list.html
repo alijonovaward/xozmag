@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Qaytarilgan tovarlar</title>
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f7f9fc;
+        }
+        nav {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        nav a {
+            color: #007BFF;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            background: #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+        nav a:hover {
+            background-color: #0056b3;
+            color: #fff;
+        }
+        .table-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            max-width: 900px;
+            width: 95%;
+            margin: 0 auto;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        form.filter-form {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        form.filter-form input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        form.filter-form button {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        form.filter-form button:hover {
+            background-color: #0056b3;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 600px;
+        }
+        table th, table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e1e1e1;
+            text-align: left;
+        }
+        table th {
+            background-color: #007BFF;
+            color: white;
+        }
+        table tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+        table tr:hover td {
+            background-color: #f0f7ff;
+        }
+        table tr:last-child td {
+            border-bottom: none;
+        }
+        @media (max-width: 768px) {
+            body { margin: 10px; }
+            nav { gap: 6px; }
+            nav a { padding: 6px 10px; font-size: 14px; }
+            h2 { font-size: 18px; }
+        }
+        @media (max-width: 480px) {
+            table { min-width: 480px; } /* horizontal scroll */
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'products' %}">Tovarlar</a>
+        <a href="{% url 'sales_page' %}">Sotuv</a>
+        <a href="{% url 'receipt_list' %}">Cheklar</a>
+        <a href="{% url 'dashboard' %}">Tushum</a>
+        <a href="{% url 'return_page' %}">Qaytarish</a>
+        <a href="{% url 'logout' %}">Chiqish</a>
+    </nav>
+    <div class="table-card">
+        <h2>Qaytarilgan tovarlar</h2>
+
+        <form method="get" class="filter-form">
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+            <button type="submit">Filter</button>
+        </form>
+
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th>Nomi</th>
+                    <th>Miqdori</th>
+                    <th>Sabab</th>
+                    <th>Sana</th>
+                </tr>
+                {% for r in returns %}
+                <tr>
+                    <td>{{ r.product.name }}</td>
+                    <td>{{ r.quantity }}</td>
+                    <td>{{ r.reason }}</td>
+                    <td>{{ r.date }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">Hech narsa topilmadi</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+</html>

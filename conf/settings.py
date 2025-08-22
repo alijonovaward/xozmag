@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'products',
     'sale',
     'stats',
+    'returns'
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+
+TIME_ZONE = 'Asia/Tashkent'
+USE_TZ = True
+
+USE_L10N = False   # settings.py da
+DATETIME_FORMAT = "Y-m-d H:i"
+TIME_FORMAT = "H:i"
