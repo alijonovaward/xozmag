@@ -103,162 +103,72 @@
     @media (max-width: 480px) {
       input.qty-input { width: 50px; font-size: 13px; }
       #receipt-description { max-width: 100%; }
-      table { min-width: 480px; } /* horizontal scroll ishlaydi */
+      table { min-width: 480px; }
     }
-  </style>
-  <style>
-@media print {
+
+    @media print {
   @page {
     size: 80mm auto;
     margin: 0;
   }
-  body {
-    margin: 0;
-    padding: 0;
+
+  body * {
+    visibility: hidden;
   }
-  #print-div {
-    width: 80mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
+
+  #receipt-detail, #receipt-detail * {
+    visibility: visible;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  #receipt-detail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0;
+    padding: 5px;
+  }
+
+  #receipt-detail table {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse;
+  }
+
+  #receipt-detail th, #receipt-detail td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #receipt-detail h2, #receipt-detail p {
+    font-size: 10px;
+    margin: 2px 0;
+  }
+
+  #receipt-detail button {
+    display: none; /* Chop etishda tugmalar kerak emas */
   }
 }
-</style>
 
-  <script>
-    let CSRF_TOKEN = '{{ csrf_token }}';
-    /* --- JavaScript funksiyalar o'zgarmagan, avvalgidek qoldiriladi --- */
-    function searchProduct() {
-      const searchInput = document.getElementById("search");
-      const q = searchInput.value.trim();
-      if (!q) {
-        document.getElementById("search-results").innerHTML = "";
-        return;
-      }
-      fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
-        .then(res => res.json())
-        .then(data => {
-          let html = "";
-          data.results.forEach(p => {
-            html += `
-              <div>
-                ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
-                <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
-                <button onclick="addToCart(${p.id})">Qo‘shish</button>
-              </div>`;
-          });
-          const resultsDiv = document.getElementById("search-results");
-          resultsDiv.innerHTML = html;
-          searchInput.focus();
-        });
-    }
-    function addToCart(productId) {
-      const qtyInput = document.getElementById("qty_" + productId);
-      const qty = qtyInput ? qtyInput.value : 1;
-      const formData = new FormData();
-      formData.append("quantity", qty);
-      fetch(`/sales/add/${productId}/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": CSRF_TOKEN },
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          renderCart(data.cart);
-          const searchInput = document.getElementById("search");
-          searchInput.value = "";
-          document.getElementById("search-results").innerHTML = "";
-          searchInput.focus();
-          if(qtyInput) qtyInput.value = 1;
-        } else { alert(data.error || "Xatolik"); }
-      });
-    }
-    function removeFromCart(productId) {
-      fetch(`/sales/remove/${productId}/`, {
-        method: "POST",
-        headers: { "X-CSRFToken": CSRF_TOKEN }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) { renderCart(data.cart); }
-        else { alert(data.error || "O‘chirishda xatolik"); }
-      });
-    }
-    function renderCart(cart) {
-      const tbody = document.getElementById("cart-body");
-      tbody.innerHTML = "";
-      let total = 0;
-      for (let pid in cart) {
-        const item = cart[pid];
-        const rowTotal = parseFloat(item.price) * parseFloat(item.quantity);
-        total += rowTotal;
-        tbody.innerHTML += `
-          <tr>
-            <td>${item.name}</td>
-            <td>${item.price}</td>
-            <td>${item.quantity}</td>
-            <td>${rowTotal.toFixed(2)}</td>
-            <td><button onclick="removeFromCart(${pid})">O‘chirish</button></td>
-          </tr>`;
-      }
-      document.getElementById("cart-total").innerText = total.toFixed(2);
-    }
-    function closeCart() {
-      const description = document.getElementById("receipt-description").value;
-      const formData = new FormData();
-      formData.append("description", description);
-      fetch("/sales/cart/close/", {
-          method: "POST",
-          headers: { "X-CSRFToken": CSRF_TOKEN },
-          body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-          if (data.success) {
-              const now = new Date();
-              const timeStr = now.toLocaleTimeString("uz-UZ",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
-              let html = `<h2>Chek</h2>`;
-              html += `<p>Vaqt: ${timeStr}</p>`;
-              html += `<p>Kimga: ${description || "-"}</p>`;
-              html += `<table border="1" cellspacing="0" cellpadding="5">
-                        <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-              data.items.forEach(it => {
-                  html += `<tr>
-                            <td>${it.name}</td>
-                            <td>${it.price}</td>
-                            <td>${it.quantity}</td>
-                            <td>${it.total}</td>
-                          </tr>`;
-              });
-              html += `</table>`;
-              html += `<p><b>Umumiy:</b> ${data.total}</p>`;
-              let printDiv = document.getElementById('print-div');
-              if (!printDiv) {
-                  printDiv = document.createElement('div');
-                  printDiv.id = 'print-div';
-                  printDiv.style.display = 'none';
-                  document.body.appendChild(printDiv);
-              }
-              printDiv.innerHTML = html;
-              const originalContents = document.body.innerHTML;
-              document.body.innerHTML = printDiv.innerHTML;
-              window.print();
-              document.body.innerHTML = originalContents;
-              location.reload();
-          } else { alert("Korzinkani yopishda xatolik"); }
-      });
-    }
-  </script>
+  </style>
 </head>
 <body>
-    <nav>
-        <a href="{% url 'products' %}">Tovarlar</a>
-        <a href="{% url 'sales_page' %}">Sotuv</a>
-        <a href="{% url 'receipt_list' %}">Cheklar</a>
-        <a href="{% url 'dashboard' %}">Tushum</a>
-        <a href="{% url 'return_page' %}">Qaytarish</a>
-        <a href="{% url 'logout' %}">Chiqish</a>
-    </nav>
+  <nav>
+      <a href="{% url 'products' %}">Tovarlar</a>
+      <a href="{% url 'sales_page' %}">Sotuv</a>
+      <a href="{% url 'receipt_list' %}">Cheklar</a>
+      <a href="{% url 'dashboard' %}">Tushum</a>
+      <a href="{% url 'return_page' %}">Qaytarish</a>
+      <a href="{% url 'logout' %}">Chiqish</a>
+  </nav>
+
   <h1>Savdo sahifasi</h1>
   <input type="text" id="search" placeholder="Mahsulot qidirish..." onkeyup="searchProduct()">
   <div id="search-results"></div>
@@ -303,7 +213,135 @@
     <p><a href="{% url 'receipt_list' %}">Cheklar ro‘yxatini ko‘rish</a></p>
   </div>
 
+  <div id="receipt-detail" style="display:none;"></div>
+
   <script>
+    let CSRF_TOKEN = '{{ csrf_token }}';
+
+    function searchProduct() {
+      const searchInput = document.getElementById("search");
+      const q = searchInput.value.trim();
+      if (!q) {
+        document.getElementById("search-results").innerHTML = "";
+        return;
+      }
+      fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+          let html = "";
+          data.results.forEach(p => {
+            html += `
+              <div>
+                ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
+                <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
+                <button onclick="addToCart(${p.id})">Qo‘shish</button>
+              </div>`;
+          });
+          document.getElementById("search-results").innerHTML = html;
+        });
+    }
+
+    function addToCart(productId) {
+      const qtyInput = document.getElementById("qty_" + productId);
+      const qty = qtyInput ? qtyInput.value : 1;
+      const formData = new FormData();
+      formData.append("quantity", qty);
+      fetch(`/sales/add/${productId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          renderCart(data.cart);
+          document.getElementById("search").value = "";
+          document.getElementById("search-results").innerHTML = "";
+          if(qtyInput) qtyInput.value = 1;
+        } else { alert(data.error || "Xatolik"); }
+      });
+    }
+
+    function removeFromCart(productId) {
+      fetch(`/sales/remove/${productId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) { renderCart(data.cart); }
+        else { alert(data.error || "O‘chirishda xatolik"); }
+      });
+    }
+
+    function renderCart(cart) {
+      const tbody = document.getElementById("cart-body");
+      tbody.innerHTML = "";
+      let total = 0;
+      for (let pid in cart) {
+        const item = cart[pid];
+        const rowTotal = parseFloat(item.price) * parseFloat(item.quantity);
+        total += rowTotal;
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.price}</td>
+            <td>${item.quantity}</td>
+            <td>${rowTotal.toFixed(2)}</td>
+            <td><button onclick="removeFromCart(${pid})">O‘chirish</button></td>
+          </tr>`;
+      }
+      document.getElementById("cart-total").innerText = total.toFixed(2);
+    }
+
+    function closeCart() {
+      const description = document.getElementById("receipt-description").value;
+      const formData = new FormData();
+      formData.append("description", description);
+
+      fetch("/sales/cart/close/", {
+          method: "POST",
+          headers: { "X-CSRFToken": CSRF_TOKEN },
+          body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.success) {
+              const now = new Date();
+              const createdAt = now.toLocaleString("uz-UZ",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+
+              let html = `<h2>Chek</h2>`;
+              html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
+              html += `<p><b>Kimga:</b> ${description || "-"}</p>`;
+              html += `<table>
+                        <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+              data.items.forEach(it => {
+                  html += `<tr>
+                            <td>${it.name}</td>
+                            <td>${it.price}</td>
+                            <td>${it.quantity}</td>
+                            <td>${it.total}</td>
+                          </tr>`;
+              });
+              html += `</table>`;
+              html += `<p><b>Umumiy:</b> ${data.total}</p>`;
+
+              let detailDiv = document.getElementById('receipt-detail');
+              detailDiv.innerHTML = html;
+              detailDiv.style.display = 'block';
+
+              window.print();
+
+              detailDiv.style.display = 'none';
+              detailDiv.innerHTML = '';
+              renderCart({});
+              document.getElementById("receipt-description").value = '';
+          } else {
+              alert("Korzinkani yopishda xatolik");
+          }
+      });
+    }
+
     renderCart({{ cart|safe }});
   </script>
 </body>
