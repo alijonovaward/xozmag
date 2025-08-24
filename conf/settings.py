@@ -137,3 +137,7 @@ USE_TZ = True
 USE_L10N = False   # settings.py da
 DATETIME_FORMAT = "Y-m-d H:i"
 TIME_FORMAT = "H:i"
+
+import os
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
