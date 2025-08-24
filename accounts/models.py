@@ -1,13 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
-# Create your models here.
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone = models.CharField(max_length=150)
-    payment = models.IntegerField()
-    added_time = models.DateTimeField(auto_now_add=False)
-    description = models.TextField()
+    phone = models.CharField(max_length=150, default='Not set')
+    payment = models.IntegerField(default=0)
+    added_time = models.DateTimeField(default=timezone.now)
+    description = models.TextField(default='No description')
     ready = models.BooleanField(default=True)
 
     def __str__(self):
