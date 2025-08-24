@@ -11,6 +11,7 @@ class ProductListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         return Product.objects.filter(profile=self.request.user.profile)
 
+
 class ProductDetailView(LoginRequiredMixin, DetailView):
     model = Product
     template_name = 'products/product_detail.html'
@@ -19,9 +20,10 @@ class ProductDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         return Product.objects.filter(profile=self.request.user.profile)
 
+
 class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
-    fields = ['name', 'price', 'selling_price', 'stock']
+    fields = ['name', 'price', 'selling_price', 'stock', 'qrcode']  # qrcode qo'shildi
     template_name = 'products/product_form.html'
 
     def get_queryset(self):
@@ -29,6 +31,24 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('product-detail', kwargs={'pk': self.object.pk})
+
+    def form_valid(self, form):
+        user_profile = self.request.user.profile
+        name = form.cleaned_data['name']
+        qrcode = form.cleaned_data.get('qrcode')
+
+        # Mahsulot nomi takrorini tekshirish
+        if Product.objects.filter(profile=user_profile, name__iexact=name).exclude(pk=self.object.pk).exists():
+            form.add_error('name', 'Bu nomdagi mahsulot allaqachon mavjud!')
+            return self.form_invalid(form)
+
+        # QR kod takrorini tekshirish
+        if qrcode and Product.objects.filter(profile=user_profile, qrcode=qrcode).exclude(pk=self.object.pk).exists():
+            form.add_error('qrcode', 'Bu QR kod allaqachon ishlatilgan!')
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
+
 
 class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
@@ -38,18 +58,26 @@ class ProductDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return Product.objects.filter(profile=self.request.user.profile)
 
+
 class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
-    fields = ['name', 'price', 'selling_price', 'stock']
+    fields = ['name', 'price', 'selling_price', 'stock', 'qrcode']  # qrcode qo'shildi
     template_name = 'products/product_form.html'
     success_url = reverse_lazy('products')
 
     def form_valid(self, form):
-        # Avvaldan mavjud mahsulotni tekshirish
         user_profile = self.request.user.profile
         name = form.cleaned_data['name']
+        qrcode = form.cleaned_data.get('qrcode')
+
+        # Mahsulot nomi takrorini tekshirish
         if Product.objects.filter(profile=user_profile, name__iexact=name).exists():
             form.add_error('name', 'Bu nomdagi mahsulot allaqachon mavjud!')
+            return self.form_invalid(form)
+
+        # QR kod takrorini tekshirish
+        if qrcode and Product.objects.filter(profile=user_profile, qrcode=qrcode).exists():
+            form.add_error('qrcode', 'Bu QR kod allaqachon ishlatilgan!')
             return self.form_invalid(form)
 
         # Profilni bog‘lash

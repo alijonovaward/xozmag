@@ -29,14 +29,23 @@ def sales_page(request):
 # ==============================
 # Mahsulot qidiruv API
 # ==============================
+from django.db.models import Q
+
+
 @login_required
 def product_search_api(request):
-    """Qidiruv so‘rovi bo‘yicha mahsulotlarni JSON formatida qaytarish"""
+    """Qidiruv so‘rovi bo‘yicha mahsulotlarni JSON formatida qaytarish (name va qrcode bo‘yicha)"""
     q = request.GET.get('q', '').strip()
     profile = request.user.profile
     if not q:
         return JsonResponse({'results': []})
-    products = Product.objects.filter(profile=profile, name__icontains=q)[:10]
+
+    products = Product.objects.filter(
+        profile=profile
+    ).filter(
+        Q(name__icontains=q) | Q(qrcode__icontains=q)
+    )[:10]
+
     data = [
         {
             'id': p.id,
@@ -47,6 +56,7 @@ def product_search_api(request):
         for p in products
     ]
     return JsonResponse({'results': data})
+
 
 # ==============================
 # Korzinkaga mahsulot qo'shish

@@ -70,7 +70,6 @@
       border-radius: 5px;
     }
 
-    /* Jadvalni responsive qilish */
     .table-wrapper {
       overflow-x: auto;
       background: #fff;
@@ -107,56 +106,15 @@
     }
 
     @media print {
-  @page {
-    size: 80mm auto;
-    margin: 0;
-  }
-
-  body * {
-    visibility: hidden;
-  }
-
-  #receipt-detail, #receipt-detail * {
-    visibility: visible;
-    font-size: 10px;
-    line-height: 1.1;
-  }
-
-  #receipt-detail {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 80mm;
-    max-width: 80mm;
-    margin: 0;
-    padding: 5px;
-  }
-
-  #receipt-detail table {
-    width: 100% !important;
-    min-width: 0 !important;
-    border-collapse: collapse;
-  }
-
-  #receipt-detail th, #receipt-detail td {
-    border: 1px solid #ccc;
-    padding: 3px 5px;
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  #receipt-detail h2, #receipt-detail p {
-    font-size: 10px;
-    margin: 2px 0;
-  }
-
-  #receipt-detail button {
-    display: none; /* Chop etishda tugmalar kerak emas */
-  }
-}
-
+      @page { size: 80mm auto; margin: 0; }
+      body * { visibility: hidden; }
+      #receipt-detail, #receipt-detail * { visibility: visible; font-size: 10px; line-height: 1.1; }
+      #receipt-detail { position: absolute; top: 0; left: 0; width: 80mm; max-width: 80mm; margin: 0; padding: 5px; }
+      #receipt-detail table { width: 100% !important; min-width: 0 !important; border-collapse: collapse; }
+      #receipt-detail th, #receipt-detail td { border: 1px solid #ccc; padding: 3px 5px; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #receipt-detail h2, #receipt-detail p { font-size: 10px; margin: 2px 0; }
+      #receipt-detail button { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -221,17 +179,13 @@
     function searchProduct() {
       const searchInput = document.getElementById("search");
       const q = searchInput.value.trim();
-      if (!q) {
-        document.getElementById("search-results").innerHTML = "";
-        return;
-      }
+      if (!q) { document.getElementById("search-results").innerHTML = ""; return; }
       fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
         .then(res => res.json())
         .then(data => {
           let html = "";
           data.results.forEach(p => {
-            html += `
-              <div>
+            html += `<div>
                 ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
                 <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
                 <button onclick="addToCart(${p.id})">Qo‘shish</button>
@@ -258,6 +212,7 @@
           document.getElementById("search").value = "";
           document.getElementById("search-results").innerHTML = "";
           if(qtyInput) qtyInput.value = 1;
+          document.getElementById("search").focus(); // cursor inputda qoladi
         } else { alert(data.error || "Xatolik"); }
       });
     }
@@ -295,17 +250,17 @@
     }
 
     function closeCart() {
-    const description = document.getElementById("receipt-description").value;
-    const formData = new FormData();
-    formData.append("description", description);
+      const description = document.getElementById("receipt-description").value;
+      const formData = new FormData();
+      formData.append("description", description);
 
-    fetch("/sales/cart/close/", {
+      fetch("/sales/cart/close/", {
         method: "POST",
         headers: { "X-CSRFToken": CSRF_TOKEN },
         body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
+      })
+      .then(res => res.json())
+      .then(data => {
         if (data.success) {
             const now = new Date();
             const createdAt = now.getFullYear() + '-' +
@@ -341,14 +296,28 @@
             detailDiv.innerHTML = '';
             renderCart({});
             document.getElementById("receipt-description").value = '';
+            document.getElementById("search").focus(); // cursor inputda qoladi
         } else {
             alert("Korzinkani yopishda xatolik");
         }
-    });
-}
-
+      });
+    }
 
     renderCart({{ cart|safe }});
+
+    // Enter bosilganda birinchi mahsulotni avtomatik korzinkaga qo'shish va inputda qolish
+    const searchInput = document.getElementById("search");
+    searchInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const firstResultDiv = document.querySelector("#search-results div");
+        if (firstResultDiv) {
+          const btn = firstResultDiv.querySelector("button");
+          if (btn) btn.click();
+        }
+        setTimeout(() => { searchInput.focus(); }, 50); // kursor inputda qoladi
+      }
+    });
   </script>
 </body>
 </html>
