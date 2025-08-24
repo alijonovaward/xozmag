@@ -295,52 +295,58 @@
     }
 
     function closeCart() {
-      const description = document.getElementById("receipt-description").value;
-      const formData = new FormData();
-      formData.append("description", description);
+    const description = document.getElementById("receipt-description").value;
+    const formData = new FormData();
+    formData.append("description", description);
 
-      fetch("/sales/cart/close/", {
-          method: "POST",
-          headers: { "X-CSRFToken": CSRF_TOKEN },
-          body: formData
-      })
-      .then(res => res.json())
-      .then(data => {
-          if (data.success) {
-              const now = new Date();
-              const createdAt = now.toLocaleString("uz-UZ",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+    fetch("/sales/cart/close/", {
+        method: "POST",
+        headers: { "X-CSRFToken": CSRF_TOKEN },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const now = new Date();
+            const createdAt = now.getFullYear() + '-' +
+                              String(now.getMonth()+1).padStart(2,'0') + '-' +
+                              String(now.getDate()).padStart(2,'0') + ' ' +
+                              String(now.getHours()).padStart(2,'0') + ':' +
+                              String(now.getMinutes()).padStart(2,'0') + ':' +
+                              String(now.getSeconds()).padStart(2,'0');
 
-              let html = `<h2>Chek</h2>`;
-              html += `<p><b>Vaqt:</b> ${createdAt}</p>`;
-              html += `<p><b>Kimga:</b> ${description || "-"}</p>`;
-              html += `<table>
-                        <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-              data.items.forEach(it => {
-                  html += `<tr>
-                            <td>${it.name}</td>
-                            <td>${it.price}</td>
-                            <td>${it.quantity}</td>
-                            <td>${it.total}</td>
-                          </tr>`;
-              });
-              html += `</table>`;
-              html += `<p><b>Umumiy:</b> ${data.total}</p>`;
+            let html = `<h2>Chek</h2>`;
+            html += `<p><b>Sana va vaqt:</b> ${createdAt}</p>`;
+            html += `<p><b>Kimga:</b> ${description || "-"}</p>`;
+            html += `<div style="overflow-x:auto;"><table>
+                      <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+            data.items.forEach(it => {
+                html += `<tr>
+                          <td>${it.name}</td>
+                          <td>${it.price}</td>
+                          <td>${it.quantity}</td>
+                          <td>${it.total}</td>
+                        </tr>`;
+            });
+            html += `</table></div>`;
+            html += `<p><b>Umumiy:</b> ${data.total}</p>`;
 
-              let detailDiv = document.getElementById('receipt-detail');
-              detailDiv.innerHTML = html;
-              detailDiv.style.display = 'block';
+            let detailDiv = document.getElementById('receipt-detail');
+            detailDiv.innerHTML = html;
+            detailDiv.style.display = 'block';
 
-              window.print();
+            window.print();
 
-              detailDiv.style.display = 'none';
-              detailDiv.innerHTML = '';
-              renderCart({});
-              document.getElementById("receipt-description").value = '';
-          } else {
-              alert("Korzinkani yopishda xatolik");
-          }
-      });
-    }
+            detailDiv.style.display = 'none';
+            detailDiv.innerHTML = '';
+            renderCart({});
+            document.getElementById("receipt-description").value = '';
+        } else {
+            alert("Korzinkani yopishda xatolik");
+        }
+    });
+}
+
 
     renderCart({{ cart|safe }});
   </script>
