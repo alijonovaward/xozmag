@@ -221,23 +221,34 @@
     let CSRF_TOKEN = '{{ csrf_token }}';
 
     function searchProduct() {
-      const searchInput = document.getElementById("search");
-      const q = searchInput.value.trim();
-      if (!q) { document.getElementById("search-results").innerHTML = ""; return; }
-      fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
-        .then(res => res.json())
-        .then(data => {
-          let html = "";
-          data.results.forEach(p => {
-            html += `<div>
-                ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
-                <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
-                <button onclick="addToCart(${p.id})">Qo‘shish</button>
-              </div>`;
-          });
-          document.getElementById("search-results").innerHTML = html;
-        });
-    }
+  const searchInput = document.getElementById("search");
+  const q = searchInput.value.trim();
+  if (!q) { document.getElementById("search-results").innerHTML = ""; return; }
+  fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
+    .then(res => res.json())
+    .then(data => {
+      let html = "";
+      data.results.forEach(p => {
+        html += `<div>
+            ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
+            <button onclick="changeQty(${p.id}, -1)">-</button>
+            <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
+            <button onclick="changeQty(${p.id}, 1)">+</button>
+            <button onclick="addToCart(${p.id})">Qo‘shish</button>
+          </div>`;
+      });
+      document.getElementById("search-results").innerHTML = html;
+    });
+}
+
+function changeQty(productId, delta) {
+  const input = document.getElementById("qty_" + productId);
+  let val = parseInt(input.value) || 1;
+  val += delta;
+  if (val < 1) val = 1; // manfiy bo'lishiga yo'l qo'ymaymiz
+  input.value = val;
+}
+
 
     function addToCart(productId) {
       const qtyInput = document.getElementById("qty_" + productId);
