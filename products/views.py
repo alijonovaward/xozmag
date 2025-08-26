@@ -2,7 +2,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Product
-from django.db.models import Sum
+from django.db.models import Sum, F
 
 
 class ProductListView(LoginRequiredMixin, ListView):
@@ -17,7 +17,13 @@ class ProductListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         user_products = self.get_queryset()
         context['total_products'] = user_products.count()
-        context['total_price'] = user_products.aggregate(Sum('price'))['price__sum'] or 0
+
+        # Jami tannarx: price * stock
+        total_price = user_products.aggregate(
+            total=Sum(F('price') * F('stock'))
+        )['total'] or 0
+
+        context['total_price'] = total_price
         return context
 
 class ProductDetailView(LoginRequiredMixin, DetailView):
