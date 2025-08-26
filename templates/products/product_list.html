@@ -10,7 +10,7 @@
       font-family: Arial, sans-serif;
       color: #333;
       margin: 20px;
-      max-width: 1000px; /* katta ekranlarda markazlashgan ko‘rinish */
+      max-width: 1000px;
       margin-left: auto;
       margin-right: auto;
     }
@@ -59,6 +59,18 @@
       background-color: #1e7e34;
     }
 
+    /* Qidiruv input */
+    .search-input {
+      display: block;
+      width: 100%;
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
     ul {
       list-style-type: none;
       padding-left: 0;
@@ -71,12 +83,11 @@
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       font-size: 16px;
-
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 15px;
-      flex-wrap: wrap; /* kichik ekranda elementlar ustma-ust */
+      flex-wrap: wrap;
     }
 
     .product-info {
@@ -149,6 +160,10 @@
       h1 {
         font-size: 20px;
       }
+      .search-input {
+        font-size: 16px;
+        padding: 12px 14px;
+      }
     }
 
     /* --- Planshet (600px–1024px) --- */
@@ -160,12 +175,20 @@
       h1 {
         font-size: 22px;
       }
+      .search-input {
+        font-size: 16px;
+        padding: 12px 16px;
+      }
     }
 
     /* --- Katta ekran (>1024px) --- */
     @media (min-width: 1025px) {
       nav a {
         font-size: 15px;
+      }
+      .search-input {
+        font-size: 15px;
+        padding: 10px 16px;
       }
     }
   </style>
@@ -178,26 +201,53 @@
         <a href="{% url 'dashboard' %}">Tushum</a>
         <a href="{% url 'return_page' %}">Qaytarish</a>
         <a href="{% url 'logout' %}">Chiqish</a>
-    </nav>
+  </nav>
 
   <h1>Sizning mahsulotlaringiz</h1>
 
+  <h3>Jami mahsulotlar soni: {{ total_products }}</h3>
+  <h3>Jami tannarx: {{ total_price }} so'm</h3>
+
+
   <a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
 
-  <ul>
-    {% for product in products %}
-      <li>
-        <div class="product-info">
-          <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm ({{ product.stock }} birlik)
-        </div>
-        <div class="actions">
-          <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
-          <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
-        </div>
-      </li>
-    {% empty %}
-      <li>Hozircha mahsulotingiz yo‘q.</li>
-    {% endfor %}
+  <!-- Qidiruv maydoni -->
+  <input type="text" id="search" placeholder="Mahsulot nomi yoki QR code qidirish" class="search-input">
+
+  <ul id="product-list">
+      {% for product in products %}
+        <li>
+          <div class="product-info">
+            <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm ({{ product.stock }} birlik)
+            {% if product.qrcode %} | QR: {{ product.qrcode }}{% endif %}
+          </div>
+          <div class="actions">
+            <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
+            <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
+          </div>
+        </li>
+      {% empty %}
+        <li>Hozircha mahsulotingiz yo‘q.</li>
+      {% endfor %}
   </ul>
+
+  <script>
+    const searchInput = document.getElementById('search');
+    const productList = document.getElementById('product-list');
+    const productItems = productList.querySelectorAll('li');
+
+    searchInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+
+        productItems.forEach(item => {
+            const text = item.querySelector('.product-info').textContent.toLowerCase();
+            if (text.includes(query)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+  </script>
 </body>
 </html>
