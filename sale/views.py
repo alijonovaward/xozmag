@@ -43,7 +43,7 @@ def product_search_api(request):
     products = Product.objects.filter(
         profile=profile
     ).filter(
-        Q(name__icontains=q) | Q(qrcode__icontains=q)
+        Q(name__icontains=q) | Q(qrcode=q)
     )[:10]
 
     data = [
