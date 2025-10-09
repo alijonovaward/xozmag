@@ -130,6 +130,20 @@
       color: #cc9a06;
     }
 
+    .add-stock-btn {
+      background-color: #17a2b8;
+      color: white;
+      padding: 7px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+    }
+
+    .add-stock-btn:hover {
+      background-color: #117a8b;
+    }
+
     /* --- Telefon (<600px) --- */
     @media (max-width: 600px) {
       nav a {
@@ -165,32 +179,6 @@
         padding: 12px 14px;
       }
     }
-
-    /* --- Planshet (600px–1024px) --- */
-    @media (min-width: 601px) and (max-width: 1024px) {
-      nav a {
-        font-size: 16px;
-        padding: 12px 18px;
-      }
-      h1 {
-        font-size: 22px;
-      }
-      .search-input {
-        font-size: 16px;
-        padding: 12px 16px;
-      }
-    }
-
-    /* --- Katta ekran (>1024px) --- */
-    @media (min-width: 1025px) {
-      nav a {
-        font-size: 15px;
-      }
-      .search-input {
-        font-size: 15px;
-        padding: 10px 16px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -203,11 +191,20 @@
         <a href="{% url 'logout' %}">Chiqish</a>
   </nav>
 
+  {% if messages %}
+    <ul style="list-style:none; padding:0; margin-bottom:20px;">
+      {% for message in messages %}
+        <li style="background-color:#e9f7ef; border-radius:6px; padding:10px; margin-bottom:8px; border:1px solid #d4f4e3;">
+          {{ message }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
   <h1>Sizning mahsulotlaringiz</h1>
 
   <h3>Jami mahsulotlar soni: {{ total_products }}</h3>
   <h3>Jami tannarx: {{ total_price }} so'm</h3>
-
 
   <a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
 
@@ -222,6 +219,8 @@
             {% if product.qrcode %} | QR: {{ product.qrcode }}{% endif %}
           </div>
           <div class="actions">
+            <!-- Miqdor qo‘shish uchun yangi oyna -->
+            <a href="{% url 'add-stock' product.pk %}" class="add-stock-btn">Miqdor qo‘shish</a>
             <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
             <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
           </div>

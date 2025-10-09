@@ -97,3 +97,33 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
         # Profilni bog‘lash
         form.instance.profile = user_profile
         return super().form_valid(form)
+
+from decimal import Decimal
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .models import Product
+
+
+class AddStockView(LoginRequiredMixin, View):
+    template_name = 'products/add_stock.html'
+
+    def get(self, request, pk):
+        product = get_object_or_404(Product, pk=pk, profile=request.user.profile)
+        return render(request, self.template_name, {'product': product})
+
+    def post(self, request, pk):
+        product = get_object_or_404(Product, pk=pk, profile=request.user.profile)
+        try:
+            add_amount = Decimal(request.POST.get('amount', '0'))
+            if add_amount <= 0:
+                messages.error(request, "Miqdor musbat bo‘lishi kerak.")
+            else:
+                product.stock += add_amount
+                product.save()
+                messages.success(request, f"{product.name} mahsulotiga {add_amount} birlik qo‘shildi.")
+                return redirect('products')
+        except Exception:
+            messages.error(request, "Noto‘g‘ri qiymat kiritildi.")
+        return render(request, self.template_name, {'product': product})
