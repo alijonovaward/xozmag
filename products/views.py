@@ -17,7 +17,7 @@ class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
-    paginate_by = 2
+    paginate_by = 30
 
     def get_queryset(self):
         """Foydalanuvchining mahsulotlaridan qidiruv va tartiblash"""
@@ -36,7 +36,7 @@ class ProductListView(LoginRequiredMixin, ListView):
         if search_query:
             self.paginate_by = None
         else:
-            self.paginate_by = 2
+            self.paginate_by = 30
 
         return queryset.order_by('name')
 
