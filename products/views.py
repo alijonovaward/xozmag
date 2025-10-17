@@ -20,9 +20,12 @@ class ProductListView(LoginRequiredMixin, ListView):
     paginate_by = 30  # Har sahifada 30 ta mahsulot
 
     def get_queryset(self):
-        queryset = Product.objects.filter(profile=self.request.user.profile)
-        search_query = self.request.GET.get('q', '').strip()
+        """Foydalanuvchining profiliga tegishli mahsulotlar ro'yxatini olish"""
+        profile = getattr(self.request.user, 'profile', None)
+        queryset = Product.objects.filter(profile=profile)
 
+        # 🔍 Qidiruv bo'lsa, name yoki qrcode bo‘yicha izlash
+        search_query = self.request.GET.get('q', '').strip()
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
@@ -33,18 +36,18 @@ class ProductListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        all_products = Product.objects.filter(profile=self.request.user.profile)
+        profile = getattr(self.request.user, 'profile', None)
+        all_products = Product.objects.filter(profile=profile)
 
-        # 🔹 Umumiy statistikalar (barcha productlardan)
+        # 📊 Umumiy statistika
         context['total_products'] = all_products.count()
         context['total_price'] = all_products.aggregate(
-            total=Sum(F('price') * F('stock'))
+            total=Sum(F('selling_price') * F('stock'))
         )['total'] or 0
 
-        # 🔍 Qidiruv qiymatini saqlab qolish
+        # 🔍 Qidiruv qiymatini kontekstda saqlash
         context['search_query'] = self.request.GET.get('q', '').strip()
         return context
-
 
 class ProductDetailView(LoginRequiredMixin, DetailView):
     model = Product
