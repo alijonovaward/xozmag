@@ -157,37 +157,58 @@ def close_cart(request):
 # ==============================
 # Cheklar ro'yxati
 # ==============================
+from django.core.paginator import Paginator
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from sale.models import Receipt
+from products.models import Product
+
+
 @login_required
 def receipt_list(request):
-    """Foydalanuvchi tomonidan yaratilgan cheklar ro'yxati filtrlash bilan"""
-    receipts = Receipt.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
+    """Foydalanuvchi tomonidan yaratilgan cheklar ro'yxati filtrlash + pagination bilan"""
+    receipts = (
+        Receipt.objects
+        .filter(user=request.user)
+        .prefetch_related('items')
+        .order_by('-created_at')
+    )
 
-    # Vaqt bo'yicha filter
+    # Filtrlar
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
+    description = request.GET.get('description')
+    ready_filter = request.GET.get('ready')
+
     if start_date:
         receipts = receipts.filter(created_at__date__gte=start_date)
     if end_date:
         receipts = receipts.filter(created_at__date__lte=end_date)
-
-    # Description bo'yicha filter
-    description = request.GET.get('description')
     if description:
         receipts = receipts.filter(description__icontains=description)
-
-    ready_filter = request.GET.get('ready')
     if ready_filter in ['true', 'false']:
         receipts = receipts.filter(ready=(ready_filter == 'true'))
 
+    # ===============================
+    # Sahifalash (pagination)
+    # ===============================
+    page_number = request.GET.get('page', 1)
+    paginator = Paginator(receipts, 20)  # har sahifada 20 ta chek
+    page_obj = paginator.get_page(page_number)
+
     context = {
-        'receipts': receipts,
+        'receipts': page_obj,  # endi bu page_obj bo‘ladi
         'start_date': start_date or '',
         'end_date': end_date or '',
         'description': description or '',
         'ready_filter': ready_filter or '',
+        'paginator': paginator,
+        'page_obj': page_obj,
     }
-
     return render(request, 'sale/receipts.html', context)
+
 
 @login_required
 @require_POST
