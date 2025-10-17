@@ -4,6 +4,7 @@ from django.utils import timezone
 from sale.models import Receipt, ReceiptItem
 from products.models import Product
 
+
 @login_required
 def dashboard(request):
     user = request.user
@@ -13,7 +14,11 @@ def dashboard(request):
     end_date = request.GET.get('end_date')
 
     # Foydalanuvchiga tegishli barcha receipts
-    all_receipts = Receipt.objects.filter(user=user).prefetch_related('items').order_by('-created_at')
+    all_receipts = (
+        Receipt.objects.filter(user=user)
+        .prefetch_related('items')  # oldindan ReceiptItem larni olib keladi
+        .order_by('-created_at')
+    )
 
     # Filterlangan receipts
     filtered_receipts = all_receipts
@@ -22,49 +27,55 @@ def dashboard(request):
     if end_date:
         filtered_receipts = filtered_receipts.filter(created_at__date__lte=end_date)
 
-    # Bugungi receipts (har doim bugungi sana)
+    # Bugungi receipts
     today = timezone.localdate()
     today_receipts = all_receipts.filter(created_at__date=today)
 
-    # Product bo‘yicha aggregate qilish funksiyasi
+    # --- OPTIMALLASH UCHUN: Barcha productlarni oldindan olish ---
+    # Bitta query bilan barcha productlar (name -> obj)
+    products_map = {
+        p.name: p for p in Product.objects.filter(profile=user.profile).only('name', 'price', 'selling_price')
+    }
+
+    # Aggregatsiya funksiyasi
     def aggregate_receipts(qs):
         product_stats = {}
         total_sum = 0
         total_profit = 0
-        for r in qs:
-            for item in r.items.all():
-                try:
-                    product = Product.objects.get(name=item.product_name, profile=user.profile)
-                    selling_price = float(product.selling_price)
-                    cost_price = float(getattr(product, 'price', 0))
-                except Product.DoesNotExist:
-                    selling_price = float(item.price)
-                    cost_price = 0
-                item_total = selling_price * float(item.quantity)
-                profit = (selling_price - cost_price) * float(item.quantity)
 
-                total_sum += item_total
-                total_profit += profit
+        # faqat kerakli receipt_item larni oldindan olish
+        receipt_items = ReceiptItem.objects.filter(receipt__in=qs).select_related(None)
 
-                if item.product_name not in product_stats:
-                    product_stats[item.product_name] = {
-                        'quantity': 0,
-                        'total_sales': 0,
-                        'total_profit': 0
-                    }
-                product_stats[item.product_name]['quantity'] += item.quantity
-                product_stats[item.product_name]['total_sales'] += item_total
-                product_stats[item.product_name]['total_profit'] += profit
+        for item in receipt_items:
+            product = products_map.get(item.product_name)
+            selling_price = float(product.selling_price) if product else float(item.price)
+            cost_price = float(getattr(product, 'price', 0)) if product else 0.0
 
-        # Dictni listga o‘tkazish
-        product_list = []
-        for name, stats in product_stats.items():
-            product_list.append({
+            item_total = selling_price * float(item.quantity)
+            profit = (selling_price - cost_price) * float(item.quantity)
+
+            total_sum += item_total
+            total_profit += profit
+
+            stats = product_stats.setdefault(item.product_name, {
+                'quantity': 0,
+                'total_sales': 0,
+                'total_profit': 0
+            })
+            stats['quantity'] += float(item.quantity)
+            stats['total_sales'] += item_total
+            stats['total_profit'] += profit
+
+        # Dict → List
+        product_list = [
+            {
                 'product_name': name,
                 'quantity': stats['quantity'],
                 'total_sales': stats['total_sales'],
                 'total_profit': stats['total_profit']
-            })
+            }
+            for name, stats in product_stats.items()
+        ]
 
         return product_list, total_sum, total_profit
 
