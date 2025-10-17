@@ -20,12 +20,13 @@ class ProductListView(LoginRequiredMixin, ListView):
     paginate_by = 30  # Har sahifada 30 ta mahsulot
 
     def get_queryset(self):
-        """Foydalanuvchining profiliga tegishli mahsulotlar ro'yxatini olish"""
+        """Foydalanuvchining barcha mahsulotlari ichidan qidiruv va tartiblash"""
         profile = getattr(self.request.user, 'profile', None)
+        search_query = self.request.GET.get('q', '').strip()
+
         queryset = Product.objects.filter(profile=profile)
 
-        # 🔍 Qidiruv bo'lsa, name yoki qrcode bo‘yicha izlash
-        search_query = self.request.GET.get('q', '').strip()
+        # 🔍 Agar qidiruv bo‘lsa — butun table bo‘yicha filter
         if search_query:
             queryset = queryset.filter(
                 Q(name__icontains=search_query) |
@@ -39,13 +40,13 @@ class ProductListView(LoginRequiredMixin, ListView):
         profile = getattr(self.request.user, 'profile', None)
         all_products = Product.objects.filter(profile=profile)
 
-        # 📊 Umumiy statistika
+        # 📊 Umumiy statistika (har doim butun baza bo‘yicha)
         context['total_products'] = all_products.count()
         context['total_price'] = all_products.aggregate(
             total=Sum(F('selling_price') * F('stock'))
         )['total'] or 0
 
-        # 🔍 Qidiruv qiymatini kontekstda saqlash
+        # 🔍 Qidiruv qiymatini saqlash
         context['search_query'] = self.request.GET.get('q', '').strip()
         return context
 
