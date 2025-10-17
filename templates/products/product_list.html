@@ -191,22 +191,52 @@
 
   <!-- Real-time qidiruv -->
   <script>
-    const searchInput = document.getElementById('search');
-    const productList = document.getElementById('product-list');
-    const productItems = productList.querySelectorAll('li');
+  const searchInput = document.getElementById('search');
+  const productList = document.getElementById('product-list');
+  const paginationDiv = document.querySelector('.pagination');
 
-    searchInput.addEventListener('input', function() {
-      const query = this.value.toLowerCase();
+  let controller = null; // 🔸 eski fetch so‘rovni bekor qilish uchun
 
-      productItems.forEach(item => {
-        const text = item.querySelector('.product-info').textContent.toLowerCase();
-        if (text.includes(query)) {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
+  searchInput.addEventListener('input', async function() {
+    const query = this.value.trim();
+
+    // 🔹 Agar avvalgi so‘rov bo‘lsa — uni bekor qilamiz
+    if (controller) controller.abort();
+    controller = new AbortController();
+
+    // 🔹 Qidiruv bo‘sh bo‘lsa — sahifani yangilaymiz
+    if (query === '') {
+      location.reload();
+      return;
+    }
+
+    try {
+      const response = await fetch(`/products/?q=${encodeURIComponent(query)}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        signal: controller.signal
       });
-    });
-  </script>
+
+      if (!response.ok) throw new Error('Tarmoq xatosi');
+      const html = await response.text();
+
+      // 🔹 HTML’dan faqat <ul id="product-list"> qismini ajratib olamiz
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newList = doc.querySelector('#product-list');
+
+      // 🔹 Eski ro‘yxatni yangilaymiz
+      if (newList) {
+        productList.innerHTML = newList.innerHTML;
+      }
+
+      // 🔹 Paginationni yashiramiz (qidiruv paytida)
+      if (paginationDiv) paginationDiv.style.display = 'none';
+
+    } catch (err) {
+      if (err.name !== 'AbortError') console.error('Qidiruv xatosi:', err);
+    }
+  });
+</script>
+
 </body>
 </html>

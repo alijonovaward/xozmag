@@ -17,39 +17,52 @@ class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
-    paginate_by = 30  # Har sahifada 30 ta mahsulot
+    paginate_by = 2
 
     def get_queryset(self):
-        """Foydalanuvchining barcha mahsulotlari ichidan qidiruv va tartiblash"""
+        """Foydalanuvchining mahsulotlaridan qidiruv va tartiblash"""
         profile = getattr(self.request.user, 'profile', None)
         search_query = self.request.GET.get('q', '').strip()
 
         queryset = Product.objects.filter(profile=profile)
 
-        # 🔍 Agar qidiruv bo‘lsa — butun table bo‘yicha filter
         if search_query:
             queryset = queryset.filter(
-                Q(name__icontains=search_query) |
-                Q(qrcode__icontains=search_query)
+                Q(qrcode=search_query) |  # aniq tenglik
+                Q(name__icontains=search_query)
             )
+
+        # pagination faqat qidiruv bo‘lmaganda
+        if search_query:
+            self.paginate_by = None
+        else:
+            self.paginate_by = 2
 
         return queryset.order_by('name')
 
     def get_context_data(self, **kwargs):
+        """Qo‘shimcha kontekstlar"""
         context = super().get_context_data(**kwargs)
         profile = getattr(self.request.user, 'profile', None)
         all_products = Product.objects.filter(profile=profile)
 
-        # 📊 Umumiy statistika (har doim butun baza bo‘yicha)
         context['total_products'] = all_products.count()
         context['total_price'] = all_products.aggregate(
             total=Sum(F('selling_price') * F('stock'))
         )['total'] or 0
 
-        # 🔍 Qidiruv qiymatini saqlash
-        context['search_query'] = self.request.GET.get('q', '').strip()
-        return context
+        search_query = self.request.GET.get('q', '').strip()
+        context['search_query'] = search_query
 
+        # 🔑 Pagination linklariga query param qo‘shish
+        get_params = self.request.GET.copy()
+        if 'page' in get_params:
+            get_params.pop('page')  # sahifani olib tashlaymiz
+        context['query_params'] = (
+            "&" + get_params.urlencode() if get_params else ""
+        )
+
+        return context
 class ProductDetailView(LoginRequiredMixin, DetailView):
     model = Product
     template_name = 'products/product_detail.html'
