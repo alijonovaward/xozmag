@@ -48,7 +48,7 @@ class ProductListView(LoginRequiredMixin, ListView):
 
         context['total_products'] = all_products.count()
         context['total_price'] = all_products.aggregate(
-            total=Sum(F('selling_price') * F('stock'))
+            total=Sum(F('price') * F('stock'))
         )['total'] or 0
 
         search_query = self.request.GET.get('q', '').strip()
