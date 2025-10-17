@@ -4,26 +4,41 @@ from django.urls import reverse_lazy
 from .models import Product
 from django.db.models import Sum, F
 
+from django.core.paginator import Paginator
+from django.db.models import Q
+
 
 class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
+    paginate_by = 30  # ✅ Har sahifada 30 ta mahsulot chiqadi
 
     def get_queryset(self):
-        return Product.objects.filter(profile=self.request.user.profile)
+        queryset = Product.objects.filter(profile=self.request.user.profile)
+        search_query = self.request.GET.get('q', '').strip()
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(qrcode__icontains=search_query)
+            )
+        return queryset.order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user_products = self.get_queryset()
+
         context['total_products'] = user_products.count()
 
         # Jami tannarx: price * stock
         total_price = user_products.aggregate(
             total=Sum(F('price') * F('stock'))
         )['total'] or 0
-
         context['total_price'] = total_price
+
+        # 🔍 Qidiruv qiymatini shablonda saqlab qolish uchun
+        context['search_query'] = self.request.GET.get('q', '').strip()
         return context
 
 class ProductDetailView(LoginRequiredMixin, DetailView):

@@ -9,10 +9,8 @@
       background-color: #f9f9f9;
       font-family: Arial, sans-serif;
       color: #333;
-      margin: 20px;
+      margin: 20px auto;
       max-width: 1000px;
-      margin-left: auto;
-      margin-right: auto;
     }
 
     nav {
@@ -32,20 +30,16 @@
       transition: background-color 0.3s ease;
     }
 
-    nav a:hover {
-      background-color: #0056b3;
-    }
+    nav a:hover { background-color: #0056b3; }
 
     h1 {
-      margin-top: 10px;
-      margin-bottom: 15px;
-      font-weight: normal;
       text-align: center;
+      font-weight: normal;
+      margin-bottom: 15px;
     }
 
     a.add-product {
       display: inline-block;
-      margin-bottom: 20px;
       background-color: #28a745;
       color: white;
       padding: 10px 22px;
@@ -53,13 +47,11 @@
       text-decoration: none;
       font-weight: 600;
       transition: background-color 0.3s ease;
+      margin-bottom: 20px;
     }
 
-    a.add-product:hover {
-      background-color: #1e7e34;
-    }
+    a.add-product:hover { background-color: #1e7e34; }
 
-    /* Qidiruv input */
     .search-input {
       display: block;
       width: 100%;
@@ -71,10 +63,7 @@
       box-sizing: border-box;
     }
 
-    ul {
-      list-style-type: none;
-      padding-left: 0;
-    }
+    ul { list-style-type: none; padding-left: 0; }
 
     ul li {
       background-color: white;
@@ -82,53 +71,15 @@
       padding: 12px 18px;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      font-size: 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 15px;
       flex-wrap: wrap;
     }
 
-    .product-info {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .actions {
-      white-space: nowrap;
-    }
-
-    .actions a {
-      margin-left: 10px;
-    }
-
-    ul li a {
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    ul li a:hover {
-      text-decoration: underline;
-    }
-
-    ul li a.delete {
-      color: #dc3545;
-      font-weight: 700;
-    }
-
-    ul li a.delete:hover {
-      color: #a71d2a;
-    }
-
-    ul li a.edit {
-      color: #ffc107;
-      font-weight: 700;
-    }
-
-    ul li a.edit:hover {
-      color: #cc9a06;
-    }
+    .product-info { flex: 1; min-width: 200px; }
+    .actions { white-space: nowrap; }
+    .actions a { margin-left: 10px; }
 
     .add-stock-btn {
       background-color: #17a2b8;
@@ -139,66 +90,58 @@
       font-weight: 600;
       transition: background-color 0.3s ease;
     }
+    .add-stock-btn:hover { background-color: #117a8b; }
 
-    .add-stock-btn:hover {
-      background-color: #117a8b;
+    ul li a.edit { color: #ffc107; font-weight: 700; }
+    ul li a.delete { color: #dc3545; font-weight: 700; }
+    ul li a.delete:hover { color: #a71d2a; }
+    ul li a.edit:hover { color: #cc9a06; }
+
+    /* Pagination */
+    .pagination {
+      text-align: center;
+      margin-top: 25px;
     }
+    .pagination a, .pagination span {
+      display: inline-block;
+      padding: 8px 14px;
+      margin: 0 4px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+    .pagination a:hover { background-color: #0056b3; }
+    .pagination .current { background-color: #6c757d; }
 
-    /* --- Telefon (<600px) --- */
     @media (max-width: 600px) {
-      nav a {
-        display: block;
-        width: 100%;
-        font-size: 16px;
-        margin: 6px 0;
-      }
-      a.add-product {
-        display: block;
-        text-align: center;
-        width: 100%;
-      }
-      ul li {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .actions {
-        width: 100%;
-        display: flex;
-        justify-content: flex-start;
-        margin-top: 8px;
-      }
-      .actions a {
-        margin-left: 0;
-        margin-right: 15px;
-      }
-      h1 {
-        font-size: 20px;
-      }
-      .search-input {
-        font-size: 16px;
-        padding: 12px 14px;
-      }
+      nav a { display: block; width: 100%; margin: 6px 0; }
+      a.add-product { width: 100%; text-align: center; }
+      ul li { flex-direction: column; align-items: flex-start; }
+      .actions { width: 100%; display: flex; margin-top: 8px; }
+      .actions a { margin-left: 0; margin-right: 15px; }
     }
   </style>
 </head>
 <body>
   <nav>
-        <a href="{% url 'products' %}">Tovarlar</a>
-        <a href="{% url 'sales_page' %}">Sotuv</a>
-        <a href="{% url 'receipt_list' %}">Cheklar</a>
-        <a href="{% url 'dashboard' %}">Tushum</a>
-        <a href="{% url 'return_page' %}">Qaytarish</a>
-        <a href="{% url 'logout' %}">Chiqish</a>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'return_page' %}">Qaytarish</a>
+    <a href="{% url 'logout' %}">Chiqish</a>
   </nav>
 
   {% if messages %}
-    <ul style="list-style:none; padding:0; margin-bottom:20px;">
-      {% for message in messages %}
-        <li style="background-color:#e9f7ef; border-radius:6px; padding:10px; margin-bottom:8px; border:1px solid #d4f4e3;">
-          {{ message }}
-        </li>
-      {% endfor %}
-    </ul>
+  <ul style="list-style:none; padding:0; margin-bottom:20px;">
+    {% for message in messages %}
+    <li style="background-color:#e9f7ef; border-radius:6px; padding:10px; margin-bottom:8px; border:1px solid #d4f4e3;">
+      {{ message }}
+    </li>
+    {% endfor %}
+  </ul>
   {% endif %}
 
   <h1>Sizning mahsulotlaringiz</h1>
@@ -208,45 +151,44 @@
 
   <a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
 
-  <!-- Qidiruv maydoni -->
-  <input type="text" id="search" placeholder="Mahsulot nomi yoki QR code qidirish" class="search-input">
+  <!-- Qidiruv -->
+  <form method="get" style="margin-bottom: 10px;">
+    <input type="text" name="q" value="{{ search_query }}" placeholder="Mahsulot nomi yoki QR code qidirish" class="search-input">
+  </form>
 
-  <ul id="product-list">
-      {% for product in products %}
-        <li>
-          <div class="product-info">
-            <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm ({{ product.stock }} birlik)
-            {% if product.qrcode %} | QR: {{ product.qrcode }}{% endif %}
-          </div>
-          <div class="actions">
-            <!-- Miqdor qo‘shish uchun yangi oyna -->
-            <a href="{% url 'add-stock' product.pk %}" class="add-stock-btn">Miqdor qo‘shish</a>
-            <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
-            <a href="{% url 'product-delete' product.pk %}" class="delete">O'chirish</a>
-          </div>
-        </li>
-      {% empty %}
-        <li>Hozircha mahsulotingiz yo‘q.</li>
-      {% endfor %}
+  <ul>
+    {% for product in products %}
+      <li>
+        <div class="product-info">
+          <a href="{% url 'product-detail' product.pk %}">{{ product.name }}</a> — {{ product.selling_price }} so'm ({{ product.stock }} birlik)
+          {% if product.qrcode %} | QR: {{ product.qrcode }}{% endif %}
+        </div>
+        <div class="actions">
+          <a href="{% url 'add-stock' product.pk %}" class="add-stock-btn">Miqdor qo‘shish</a>
+          <a href="{% url 'product-edit' product.pk %}" class="edit">Tahrirlash</a>
+          <a href="{% url 'product-delete' product.pk %}" class="delete">O‘chirish</a>
+        </div>
+      </li>
+    {% empty %}
+      <li>Hozircha mahsulotingiz yo‘q.</li>
+    {% endfor %}
   </ul>
 
-  <script>
-    const searchInput = document.getElementById('search');
-    const productList = document.getElementById('product-list');
-    const productItems = productList.querySelectorAll('li');
+  <!-- Sahifalash -->
+  {% if is_paginated %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">&laquo; Boshiga</a>
+      <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Oldingi</a>
+    {% endif %}
 
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase();
+    <span class="current">Sahifa {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
 
-        productItems.forEach(item => {
-            const text = item.querySelector('.product-info').textContent.toLowerCase();
-            if (text.includes(query)) {
-                item.style.display = '';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-    });
-  </script>
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Keyingi</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">Oxiriga &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
 </body>
 </html>
