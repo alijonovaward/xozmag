@@ -19,16 +19,20 @@ def dashboard(request):
         .prefetch_related('items')  # oldindan ReceiptItem larni olib keladi
         .order_by('-created_at')
     )
-
+    today = timezone.localdate()
     # Filterlangan receipts
-    filtered_receipts = all_receipts
-    if start_date:
-        filtered_receipts = filtered_receipts.filter(created_at__date__gte=start_date)
-    if end_date:
-        filtered_receipts = filtered_receipts.filter(created_at__date__lte=end_date)
+    if start_date or end_date:
+        filtered_receipts = all_receipts
+        if start_date:
+            filtered_receipts = filtered_receipts.filter(created_at__date__gte=start_date)
+        if end_date:
+            filtered_receipts = filtered_receipts.filter(created_at__date__lte=end_date)
+    else:
+        # Sana tanlanmasa — faqat bugungi kun
+        filtered_receipts = all_receipts.filter(created_at__date=today)
 
     # Bugungi receipts
-    today = timezone.localdate()
+
     today_receipts = all_receipts.filter(created_at__date=today)
 
     # --- OPTIMALLASH UCHUN: Barcha productlarni oldindan olish ---
