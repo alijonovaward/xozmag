@@ -8,11 +8,16 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 
 
+from django.views.generic import ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q, Sum, F
+from .models import Product
+
 class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'products/product_list.html'
     context_object_name = 'products'
-    paginate_by = 30  # ✅ Har sahifada 30 ta mahsulot chiqadi
+    paginate_by = 30  # Har sahifada 30 ta mahsulot
 
     def get_queryset(self):
         queryset = Product.objects.filter(profile=self.request.user.profile)
@@ -23,23 +28,23 @@ class ProductListView(LoginRequiredMixin, ListView):
                 Q(name__icontains=search_query) |
                 Q(qrcode__icontains=search_query)
             )
+
         return queryset.order_by('name')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_products = self.get_queryset()
+        all_products = Product.objects.filter(profile=self.request.user.profile)
 
-        context['total_products'] = user_products.count()
-
-        # Jami tannarx: price * stock
-        total_price = user_products.aggregate(
+        # 🔹 Umumiy statistikalar (barcha productlardan)
+        context['total_products'] = all_products.count()
+        context['total_price'] = all_products.aggregate(
             total=Sum(F('price') * F('stock'))
         )['total'] or 0
-        context['total_price'] = total_price
 
-        # 🔍 Qidiruv qiymatini shablonda saqlab qolish uchun
+        # 🔍 Qidiruv qiymatini saqlab qolish
         context['search_query'] = self.request.GET.get('q', '').strip()
         return context
+
 
 class ProductDetailView(LoginRequiredMixin, DetailView):
     model = Product

@@ -152,11 +152,9 @@
   <a href="{% url 'product-add' %}" class="add-product">Yangi mahsulot qo‘shish</a>
 
   <!-- Qidiruv -->
-  <form method="get" style="margin-bottom: 10px;">
-    <input type="text" name="q" value="{{ search_query }}" placeholder="Mahsulot nomi yoki QR code qidirish" class="search-input">
-  </form>
+  <input type="text" id="search" value="{{ search_query }}" placeholder="Mahsulot nomi yoki QR code qidirish" class="search-input">
 
-  <ul>
+  <ul id="product-list">
     {% for product in products %}
       <li>
         <div class="product-info">
@@ -190,5 +188,25 @@
     {% endif %}
   </div>
   {% endif %}
+
+  <!-- Real-time qidiruv -->
+  <script>
+    const searchInput = document.getElementById('search');
+    const productList = document.getElementById('product-list');
+    const productItems = productList.querySelectorAll('li');
+
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+
+      productItems.forEach(item => {
+        const text = item.querySelector('.product-info').textContent.toLowerCase();
+        if (text.includes(query)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </body>
 </html>
