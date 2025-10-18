@@ -160,21 +160,76 @@
       overflow-x: auto;
     }
 
-    /* print qismi o‘zgartirilmagan */
-    @media print {
-      @page { size: 80mm auto; margin: 0; }
-      body * { visibility: hidden; }
-      #receipt-detail, #receipt-detail * { visibility: visible; font-size: 16px; line-height: 1.2; }
-      #receipt-detail { position: absolute; top: 0; left: 0; width: 80mm; max-width: 80mm; margin: 0; padding: 5px; }
-      #receipt-detail table { width: 100% !important; border-collapse: collapse; }
-      #receipt-detail th, #receipt-detail td {
-        border: 1px solid #ccc;
-        padding: 3px 5px;
-        font-size: 16px;
-        word-break: break-word;
-      }
-      #receipt-detail button { display: none; }
+    @media (max-width: 768px) {
+      body { margin: 10px; }
+      nav { gap: 6px; }
+      nav a { padding: 6px 10px; font-size: 14px; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 18px; }
+      input#search { font-size: 14px; }
+      button { font-size: 13px; padding: 5px 10px; }
     }
+
+    @media (max-width: 480px) {
+      input.qty-input { width: 50px; font-size: 13px; }
+      #receipt-description { max-width: 100%; }
+      table { min-width: 480px; }
+    }
+
+    @media print {
+  @page { size: 80mm auto; margin: 0; }
+
+  body * { visibility: hidden; }
+
+  #receipt-detail, #receipt-detail * {
+    visibility: visible;
+    font-size: 16px;   /* shrift kattaligi */
+    line-height: 1.2;  /* biroz kengroq oraliq */
+  }
+
+  #receipt-detail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80mm;
+    max-width: 80mm;
+    margin: 0;
+    padding: 5px;
+  }
+
+  #receipt-detail table {
+    width: 100% !important;
+    min-width: 0 !important;
+    border-collapse: collapse;
+    table-layout: auto;   /* ustun kengligi kontentga qarab belgilanadi */
+  }
+
+  #receipt-detail th,
+  #receipt-detail td {
+    border: 1px solid #ccc;
+    padding: 3px 5px;
+    font-size: 16px;       /* shriftni kattalashtirdik */
+    overflow: hidden;
+    text-overflow: clip;   /* ellipsis o‘rniga to‘liq ko‘rsatadi */
+    white-space: normal;   /* matn va raqamlar qatorga tushishi mumkin */
+    word-break: break-word; /* juda uzun raqam bo‘lsa bo‘linadi */
+  }
+
+  #receipt-detail th:last-child,
+  #receipt-detail td:last-child {
+    text-align: right; /* jami ustun raqamlarni o‘ngga tekislaydi */
+  }
+
+  #receipt-detail h2,
+  #receipt-detail p {
+    font-size: 16px;
+    margin: 2px 0;
+  }
+
+  #receipt-detail button { display: none; }
+}
+
+
   </style>
 </head>
 <body>
@@ -318,26 +373,42 @@
     }
 
     function printReceiptInline(receiptId) {
-      const row = document.getElementById('r' + receiptId);
-      if (!row) return;
-      const itemsData = JSON.parse(row.dataset.items);
-      const total = row.dataset.total;
-      const description = row.dataset.description.trim() || "-";
-      const createdAt = row.dataset.created_at;
+  const row = document.getElementById('r' + receiptId);
+  if (!row) return;
 
-      let html = `<h2 style="text-align:center;">OOO AZAMJON FAYZ ASL SAVDO</h2>`;
-      html += `<p style="text-align:center;">Buramatut, Beruniy, Yakkatom</p>`;
-      html += `<hr><p><b>Vaqt:</b> ${createdAt}</p><p><b>Kimga:</b> ${description}</p>`;
-      html += `<table><tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-      itemsData.forEach(it => {
-          html += `<tr><td>${it.name}</td><td>${it.price}</td><td>${it.quantity}</td><td>${it.total}</td></tr>`;
-      });
-      html += `</table><p><b>Umumiy summa:</b> ${total}</p>`;
-      const detailDiv = document.getElementById('receipt-detail');
-      detailDiv.innerHTML = html;
-      detailDiv.style.display = 'block';
-      window.print();
-    }
+  const itemsData = JSON.parse(row.dataset.items);
+  const total = row.dataset.total;
+  const description = row.dataset.description.trim() || "-";
+  const createdAt = row.dataset.created_at;
+
+  let html = `<h2 style="text-align:center; margin-bottom:5px;">OOO AZAMJON FAYZ ASL SAVDO</h2>`;
+  html += `<p style="text-align:center; margin:2px 0;">Buramatut, Beruniy, Yakkatom</p>`;
+  html += `<hr>`;
+  html += `<p><b>Sana va vaqt:</b> ${createdAt}</p>`;
+  html += `<p><b>Kimga:</b> ${description}</p>`;
+  html += `<div style="overflow-x:auto;"><table>
+            <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+  itemsData.forEach(it => {
+      html += `<tr>
+                <td>${it.name}</td>
+                <td>${it.price}</td>
+                <td>${it.quantity}</td>
+                <td>${it.total}</td>
+              </tr>`;
+  });
+  html += `</table></div>`;
+  html += `<p><b>Umumiy:</b> ${total}</p>`;
+
+  const detailDiv = document.getElementById('receipt-detail');
+  detailDiv.innerHTML = html;
+  detailDiv.style.display = 'block';
+
+  window.print();
+
+  detailDiv.style.display = 'none';
+  detailDiv.innerHTML = '';
+}
+
 
     function toggleReady(receiptId, btn) {
       fetch("{% url 'toggle_ready' 0 %}".replace('0', receiptId), {
