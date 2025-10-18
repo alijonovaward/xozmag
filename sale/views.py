@@ -3,16 +3,28 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from products.models import Product
 from .models import Receipt, ReceiptItem
+
+
+# ==============================
+# Foydalanuvchi aktiv cartni olish
+# ==============================
+def get_active_cart_key(request):
+    active_key = request.session.get("active_cart", "cart1")
+    if active_key not in ["cart1", "cart2", "cart3"]:
+        active_key = "cart1"
+    return active_key
+
 
 # ==============================
 # Savdo sahifasi
 # ==============================
 @login_required
 def sales_page(request):
-    """Foydalanuvchining hozirgi korzinkasini ko'rsatish"""
-    cart = request.session.get('cart', {})
+    active_key = get_active_cart_key(request)
+    cart = request.session.get(active_key, {})
     rows = []
     for pid, item in cart.items():
         price = float(item['price'])
@@ -24,17 +36,14 @@ def sales_page(request):
             'quantity': qty,
             'total': round(price * qty, 2),
         })
-    return render(request, 'sale/sales.html', {'cart': cart, 'rows': rows})
+    return render(request, 'sale/sales.html', {'cart': cart, 'rows': rows, 'active_cart': active_key})
+
 
 # ==============================
 # Mahsulot qidiruv API
 # ==============================
-from django.db.models import Q
-
-
 @login_required
 def product_search_api(request):
-    """Qidiruv so‘rovi bo‘yicha mahsulotlarni JSON formatida qaytarish (name va qrcode bo‘yicha)"""
     q = request.GET.get('q', '').strip()
     profile = request.user.profile
     if not q:
@@ -64,6 +73,7 @@ def product_search_api(request):
 @login_required
 @require_POST
 def add_to_cart(request, product_id):
+    active_key = get_active_cart_key(request)
     product = get_object_or_404(Product, id=product_id)
     raw_qty = (request.POST.get('quantity') or '1').strip()
     raw_qty = raw_qty.replace(',', '.')
@@ -74,7 +84,7 @@ def add_to_cart(request, product_id):
     if quantity <= 0:
         return JsonResponse({'success': False, 'error': 'Miqdor > 0 bo‘lishi kerak'}, status=400)
 
-    cart = request.session.get('cart', {})
+    cart = request.session.get(active_key, {})
     pid = str(product.id)
     if pid in cart:
         cart[pid]['quantity'] = float(cart[pid]['quantity']) + float(quantity)
@@ -84,8 +94,9 @@ def add_to_cart(request, product_id):
             'price': float(product.selling_price),
             'quantity': float(quantity),
         }
-    request.session['cart'] = cart
+    request.session[active_key] = cart
     return JsonResponse({'success': True, 'cart': cart})
+
 
 # ==============================
 # Korzinkadan mahsulot o'chirish
@@ -93,13 +104,15 @@ def add_to_cart(request, product_id):
 @login_required
 @require_POST
 def remove_from_cart(request, product_id):
-    cart = request.session.get('cart', {})
+    active_key = get_active_cart_key(request)
+    cart = request.session.get(active_key, {})
     pid = str(product_id)
     if pid in cart:
         del cart[pid]
-        request.session['cart'] = cart
+        request.session[active_key] = cart
         return JsonResponse({'success': True, 'cart': cart})
     return JsonResponse({'success': False, 'error': 'Mahsulot topilmadi'}, status=404)
+
 
 # ==============================
 # Korzinkani yopish va chek yaratish
@@ -107,20 +120,13 @@ def remove_from_cart(request, product_id):
 @login_required
 @require_POST
 def close_cart(request):
-    """Korzinkani yopadi va Receipt + ReceiptItem larni yaratadi"""
-    cart = request.session.get('cart', {})
+    active_key = get_active_cart_key(request)
+    cart = request.session.get(active_key, {})
     if not cart:
         return JsonResponse({'success': False, 'error': 'Korzinka bo‘sh'})
 
-    # Inputdan kelayotgan kimga tegishli ekanini olish
     description = request.POST.get('description', '').strip()
-
-    # Receipt yaratish
-    receipt = Receipt.objects.create(
-        user=request.user,
-        description=description
-    )
-
+    receipt = Receipt.objects.create(user=request.user, description=description)
     items_data = []
     total = Decimal('0.00')
 
@@ -128,19 +134,15 @@ def close_cart(request):
         product = Product.objects.get(id=int(pid))
         qty = Decimal(str(item['quantity']))
         price = Decimal(str(item['price']))
-
-        # Stokni kamaytirish
         product.stock -= qty
         product.save()
 
-        # ReceiptItem yaratish
         ReceiptItem.objects.create(
             receipt=receipt,
             product_name=item['name'],
             price=price,
             quantity=qty,
         )
-
         total += price * qty
         items_data.append({
             'name': item['name'],
@@ -149,26 +151,18 @@ def close_cart(request):
             'total': str(price * qty)
         })
 
-    # Session korzinkani tozalash
-    request.session['cart'] = {}
-
+    request.session[active_key] = {}
     return JsonResponse({'success': True, 'items': items_data, 'total': str(total)})
+
 
 # ==============================
 # Cheklar ro'yxati
 # ==============================
 from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse
-from sale.models import Receipt
-from products.models import Product
 
 
 @login_required
 def receipt_list(request):
-    """Foydalanuvchi tomonidan yaratilgan cheklar ro'yxati filtrlash + pagination bilan"""
     receipts = (
         Receipt.objects
         .filter(user=request.user)
@@ -176,7 +170,6 @@ def receipt_list(request):
         .order_by('-created_at')
     )
 
-    # Filtrlar
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     description = request.GET.get('description')
@@ -191,15 +184,12 @@ def receipt_list(request):
     if ready_filter in ['true', 'false']:
         receipts = receipts.filter(ready=(ready_filter == 'true'))
 
-    # ===============================
-    # Sahifalash (pagination)
-    # ===============================
     page_number = request.GET.get('page', 1)
-    paginator = Paginator(receipts, 20)  # har sahifada 20 ta chek
+    paginator = Paginator(receipts, 20)
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'receipts': page_obj,  # endi bu page_obj bo‘ladi
+        'receipts': page_obj,
         'start_date': start_date or '',
         'end_date': end_date or '',
         'description': description or '',
@@ -213,8 +203,19 @@ def receipt_list(request):
 @login_required
 @require_POST
 def toggle_ready(request, receipt_id):
-    """Receipt ready status ni toggle qiladi"""
     receipt = get_object_or_404(Receipt, id=receipt_id, user=request.user)
     receipt.ready = not receipt.ready
     receipt.save()
     return JsonResponse({'success': True, 'ready': receipt.ready})
+
+
+# ==============================
+# Aktiv korzinkani almashtirish
+# ==============================
+@login_required
+def set_active_cart(request, cart_number):
+    """cart_number: 1, 2 yoki 3"""
+    if cart_number not in ['1', '2', '3']:
+        return JsonResponse({'success': False, 'error': 'Noto‘g‘ri cart raqami'})
+    request.session['active_cart'] = f'cart{cart_number}'
+    return JsonResponse({'success': True, 'active_cart': request.session['active_cart']})

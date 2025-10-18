@@ -20,14 +20,23 @@
       text-decoration: none;
       padding: 8px 16px;
       border-radius: 5px;
-      transition: background-color 0.3s ease, color 0.3s ease;
       background: #fff;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
-    nav a:hover {
-      background-color: #0056b3;
+    nav a:hover { background-color: #0056b3; color: #fff; }
+
+    .cart-buttons { display: flex; gap: 10px; margin-bottom: 20px; }
+    .cart-btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
       color: #fff;
     }
+    .cart-btn.active { background-color: #28a745; }
+    .cart-btn.inactive { background-color: #007bff; }
+
     h1, h2 { margin-top: 20px; }
 
     input#search {
@@ -48,6 +57,8 @@
     }
     #search-results div:hover { background: #f1f1f1; }
 
+    input.qty-input { width: 60px; padding: 5px; font-size: 14px; }
+
     .cart-header { margin-top: 30px; }
     button {
       padding: 6px 12px;
@@ -59,7 +70,6 @@
       font-size: 14px;
     }
     button:hover { background: #0056b3; }
-    input.qty-input { width: 60px; padding: 5px; font-size: 14px; }
 
     #receipt-description {
       width: 100%;
@@ -88,22 +98,6 @@
       text-align: left;
     }
     th { background: #f0f0f0; }
-
-    @media (max-width: 768px) {
-      body { margin: 10px; }
-      nav { gap: 6px; }
-      nav a { padding: 6px 10px; font-size: 14px; }
-      h1 { font-size: 22px; }
-      h2 { font-size: 18px; }
-      input#search { font-size: 14px; }
-      button { font-size: 13px; padding: 5px 10px; }
-    }
-
-    @media (max-width: 480px) {
-      input.qty-input { width: 50px; font-size: 13px; }
-      #receipt-description { max-width: 100%; }
-      table { min-width: 480px; }
-    }
 
     @media print {
   @page { size: 80mm auto; margin: 0; }
@@ -157,21 +151,26 @@
 
   #receipt-detail button { display: none; }
 }
-
-
   </style>
 </head>
 <body>
   <nav>
-      <a href="{% url 'products' %}">Tovarlar</a>
-      <a href="{% url 'sales_page' %}">Sotuv</a>
-      <a href="{% url 'receipt_list' %}">Cheklar</a>
-      <a href="{% url 'dashboard' %}">Tushum</a>
-      <a href="{% url 'return_page' %}">Qaytarish</a>
-      <a href="{% url 'logout' %}">Chiqish</a>
+    <a href="{% url 'products' %}">Tovarlar</a>
+    <a href="{% url 'sales_page' %}">Sotuv</a>
+    <a href="{% url 'receipt_list' %}">Cheklar</a>
+    <a href="{% url 'dashboard' %}">Tushum</a>
+    <a href="{% url 'return_page' %}">Qaytarish</a>
+    <a href="{% url 'logout' %}">Chiqish</a>
   </nav>
 
   <h1>Savdo sahifasi</h1>
+
+  <div class="cart-buttons">
+    <button class="cart-btn {% if active_cart == 'cart1' %}active{% else %}inactive{% endif %}" onclick="setActiveCart(1)">Korzinka 1</button>
+    <button class="cart-btn {% if active_cart == 'cart2' %}active{% else %}inactive{% endif %}" onclick="setActiveCart(2)">Korzinka 2</button>
+    <button class="cart-btn {% if active_cart == 'cart3' %}active{% else %}inactive{% endif %}" onclick="setActiveCart(3)">Korzinka 3</button>
+  </div>
+
   <input type="text" id="search" placeholder="Mahsulot qidirish..." onkeyup="searchProduct()" autocomplete="off">
   <div id="search-results"></div>
 
@@ -220,42 +219,45 @@
   <script>
     let CSRF_TOKEN = '{{ csrf_token }}';
 
+    // 🔍 Qidiruv
     function searchProduct() {
-  const searchInput = document.getElementById("search");
-  const q = searchInput.value.trim();
-  if (!q) { document.getElementById("search-results").innerHTML = ""; return; }
-  fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
-    .then(res => res.json())
-    .then(data => {
-      let html = "";
-      data.results.forEach(p => {
-        html += `<div>
-            ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
-            <button onclick="changeQty(${p.id}, -1)">-</button>
-            <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
-            <button onclick="changeQty(${p.id}, 1)">+</button>
-            <button onclick="addToCart(${p.id})">Qo‘shish</button>
-          </div>`;
-      });
-      document.getElementById("search-results").innerHTML = html;
-    });
-}
+      const q = document.getElementById("search").value.trim();
+      if (!q) { document.getElementById("search-results").innerHTML = ""; return; }
 
-function changeQty(productId, delta) {
-  const input = document.getElementById("qty_" + productId);
-  let val = parseInt(input.value) || 1;
-  val += delta;
-  if (val < 1) val = 1; // manfiy bo'lishiga yo'l qo'ymaymiz
-  input.value = val;
-}
+      fetch(`/sales/api/search/?q=${encodeURIComponent(q)}`)
+        .then(res => res.json())
+        .then(data => {
+          let html = "";
+          data.results.forEach(p => {
+            html += `<div>
+                ${p.name} — ${p.selling_price} so'm (qoldiq: ${p.stock})
+                <button onclick="changeQty(${p.id}, -1)">-</button>
+                <input type="number" id="qty_${p.id}" class="qty-input" min="1" value="1">
+                <button onclick="changeQty(${p.id}, 1)">+</button>
+                <button onclick="addToCart(${p.id})">Qo‘shish</button>
+              </div>`;
+          });
+          document.getElementById("search-results").innerHTML = html;
+        });
+    }
 
+    // 🔢 Miqdorni o‘zgartirish
+    function changeQty(id, delta) {
+      const input = document.getElementById("qty_" + id);
+      let val = parseInt(input.value) || 1;
+      val += delta;
+      if (val < 1) val = 1;
+      input.value = val;
+    }
 
-    function addToCart(productId) {
-      const qtyInput = document.getElementById("qty_" + productId);
+    // ➕ Qo‘shish
+    function addToCart(id) {
+      const qtyInput = document.getElementById("qty_" + id);
       const qty = qtyInput ? qtyInput.value : 1;
       const formData = new FormData();
       formData.append("quantity", qty);
-      fetch(`/sales/add/${productId}/`, {
+
+      fetch(`/sales/add/${id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": CSRF_TOKEN },
         body: formData
@@ -266,24 +268,26 @@ function changeQty(productId, delta) {
           renderCart(data.cart);
           document.getElementById("search").value = "";
           document.getElementById("search-results").innerHTML = "";
-          if(qtyInput) qtyInput.value = 1;
-          document.getElementById("search").focus(); // cursor inputda qoladi
-        } else { alert(data.error || "Xatolik"); }
+          if (qtyInput) qtyInput.value = 1;
+          document.getElementById("search").focus();
+        } else alert(data.error || "Xatolik");
       });
     }
 
-    function removeFromCart(productId) {
-      fetch(`/sales/remove/${productId}/`, {
+    // ➖ O‘chirish
+    function removeFromCart(id) {
+      fetch(`/sales/remove/${id}/`, {
         method: "POST",
         headers: { "X-CSRFToken": CSRF_TOKEN }
       })
       .then(res => res.json())
       .then(data => {
-        if (data.success) { renderCart(data.cart); }
-        else { alert(data.error || "O‘chirishda xatolik"); }
+        if (data.success) renderCart(data.cart);
+        else alert(data.error || "O‘chirishda xatolik");
       });
     }
 
+    // 🧮 Jadvalni qayta chizish
     function renderCart(cart) {
       const tbody = document.getElementById("cart-body");
       tbody.innerHTML = "";
@@ -304,6 +308,7 @@ function changeQty(productId, delta) {
       document.getElementById("cart-total").innerText = total.toFixed(2);
     }
 
+    // 🧾 Korzinkani yopish
     function closeCart() {
       const description = document.getElementById("receipt-description").value;
       const formData = new FormData();
@@ -317,47 +322,35 @@ function changeQty(productId, delta) {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-            const now = new Date();
-            const createdAt = now.getFullYear() + '-' +
-                              String(now.getMonth()+1).padStart(2,'0') + '-' +
-                              String(now.getDate()).padStart(2,'0') + ' ' +
-                              String(now.getHours()).padStart(2,'0') + ':' +
-                              String(now.getMinutes()).padStart(2,'0') + ':' +
-                              String(now.getSeconds()).padStart(2,'0');
-
-            let html = `<h2 style="text-align:center; margin-bottom:5px;">OOO AZAMJON FAYZ ASL SAVDO</h2>`;
-            html += `<p style="text-align:center; margin:2px 0;">Buramatut, Beruniy, Yakkatom</p>`;
-            html += `<hr>`;
-            html += `<p><b>Sana va vaqt:</b> ${createdAt}</p>`;
-            html += `<p><b>Kimga:</b> ${description || "-"}</p>`;
-            html += `<div style="overflow-x:auto;"><table>
-                      <tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
-            data.items.forEach(it => {
-                html += `<tr>
-                          <td>${it.name}</td>
-                          <td>${it.price}</td>
-                          <td>${it.quantity}</td>
-                          <td>${it.total}</td>
-                        </tr>`;
-            });
-            html += `</table></div>`;
-            html += `<p><b>Umumiy:</b> ${data.total}</p>`;
-
-            let detailDiv = document.getElementById('receipt-detail');
-            detailDiv.innerHTML = html;
-            detailDiv.style.display = 'block';
-
-            window.print();
-
-            detailDiv.style.display = 'none';
-            detailDiv.innerHTML = '';
-            renderCart({});
-            document.getElementById("receipt-description").value = '';
-            document.getElementById("search").focus(); // cursor inputda qoladi
-        } else {
-            alert("Korzinkani yopishda xatolik");
-        }
+          let now = new Date();
+          let html = `<h2 style="text-align:center;">OOO AZAMJON FAYZ ASL SAVDO</h2>
+                      <p style="text-align:center;">Buramatut, Beruniy, Yakkatom</p><hr>
+                      <p><b>Sana va vaqt:</b> ${now.toLocaleString()}</p>
+                      <p><b>Kimga:</b> ${description || "-"}</p>
+                      <table><tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;
+          data.items.forEach(it => {
+            html += `<tr><td>${it.name}</td><td>${it.price}</td><td>${it.quantity}</td><td>${it.total}</td></tr>`;
+          });
+          html += `</table><p><b>Umumiy:</b> ${data.total}</p>`;
+          const div = document.getElementById("receipt-detail");
+          div.innerHTML = html;
+          div.style.display = 'block';
+          window.print();
+          div.style.display = 'none';
+          renderCart({});
+          document.getElementById("receipt-description").value = '';
+          document.getElementById("search").focus();
+        } else alert("Korzinkani yopishda xatolik");
       });
+    }
+
+    // 🔄 Aktiv korzinkani tanlash
+    function setActiveCart(num) {
+      fetch(`/sales/set_active_cart/${num}/`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) location.reload();
+        });
     }
 
     renderCart({{ cart|safe }});

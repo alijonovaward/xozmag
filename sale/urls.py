@@ -9,4 +9,7 @@ urlpatterns = [
     path('cart/close/', views.close_cart, name='close_cart'),
     path('receipts/', views.receipt_list, name='receipt_list'),
     path('toggle_ready/<int:receipt_id>/', views.toggle_ready, name='toggle_ready'),
+
+    # 🔥 MUHIM: bu yo‘nalish yo‘q edi
+    path('set_active_cart/<str:cart_number>/', views.set_active_cart, name='set_active_cart'),
 ]
