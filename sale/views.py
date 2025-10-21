@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from products.models import Product
 from .models import Receipt, ReceiptItem
+from accounts.models import Profile
 
 
 # ==============================
@@ -152,7 +153,11 @@ def close_cart(request):
         })
 
     request.session[active_key] = {}
-    return JsonResponse({'success': True, 'items': items_data, 'total': str(total)})
+
+    profile = Profile.objects.filter(user=request.user).first()
+    profile_name = profile.name if profile and profile.name else "Do‘kon nomi belgilanmagan"
+    profile_location = profile.location if profile and profile.location else "Manzil belgilanmagan"
+    return JsonResponse({'success': True, 'items': items_data, 'total': str(total), 'name':profile_name, 'location':profile_location})
 
 
 # ==============================
@@ -188,6 +193,10 @@ def receipt_list(request):
     paginator = Paginator(receipts, 20)
     page_obj = paginator.get_page(page_number)
 
+    profile = Profile.objects.filter(user=request.user).first()
+    profile_name = profile.name if profile and profile.name else "Do‘kon nomi belgilanmagan"
+    profile_location = profile.location if profile and profile.location else "Manzil belgilanmagan"
+
     context = {
         'receipts': page_obj,
         'start_date': start_date or '',
@@ -196,6 +205,8 @@ def receipt_list(request):
         'ready_filter': ready_filter or '',
         'paginator': paginator,
         'page_obj': page_obj,
+        'name': profile_name,
+        'location': profile_location
     }
     return render(request, 'sale/receipts.html', context)
 

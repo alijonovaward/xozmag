@@ -323,8 +323,8 @@
       .then(data => {
         if (data.success) {
           let now = new Date();
-          let html = `<h2 style="text-align:center;">OOO AZAMJON FAYZ ASL SAVDO</h2>
-                      <p style="text-align:center;">Buramatut, Beruniy, Yakkatom</p><hr>
+          let html = `<h2 style="text-align:center;">${data.name}</h2>
+                      <p style="text-align:center;">${data.location}</p><hr>
                       <p><b>Sana va vaqt:</b> ${now.toLocaleString()}</p>
                       <p><b>Kimga:</b> ${description || "-"}</p>
                       <table><tr><th>Mahsulot</th><th>Narx</th><th>Miqdor</th><th>Jami</th></tr>`;

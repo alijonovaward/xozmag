@@ -381,8 +381,8 @@
   const description = row.dataset.description.trim() || "-";
   const createdAt = row.dataset.created_at;
 
-  let html = `<h2 style="text-align:center; margin-bottom:5px;">OOO AZAMJON FAYZ ASL SAVDO</h2>`;
-  html += `<p style="text-align:center; margin:2px 0;">Buramatut, Beruniy, Yakkatom</p>`;
+  let html = `<h2 style="text-align:center; margin-bottom:5px;">{{ name }}</h2>`;
+  html += `<p style="text-align:center; margin:2px 0;">{{ location }}</p>`;
   html += `<hr>`;
   html += `<p><b>Sana va vaqt:</b> ${createdAt}</p>`;
   html += `<p><b>Kimga:</b> ${description}</p>`;

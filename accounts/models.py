@@ -9,6 +9,8 @@ class Profile(models.Model):
     added_time = models.DateTimeField(default=timezone.now)
     description = models.TextField(default='No description')
     ready = models.BooleanField(default=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    location = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.user.username
