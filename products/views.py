@@ -38,7 +38,7 @@ class ProductListView(LoginRequiredMixin, ListView):
         else:
             self.paginate_by = 30
 
-        return queryset.order_by('-stock')
+        return queryset.order_by('name')
 
     def get_context_data(self, **kwargs):
         """Qo‘shimcha kontekstlar"""
