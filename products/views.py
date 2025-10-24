@@ -20,7 +20,6 @@ class ProductListView(LoginRequiredMixin, ListView):
     paginate_by = 30
 
     def get_queryset(self):
-        """Foydalanuvchining mahsulotlaridan qidiruv va tartiblash"""
         profile = getattr(self.request.user, 'profile', None)
         search_query = self.request.GET.get('q', '').strip()
 
@@ -28,17 +27,15 @@ class ProductListView(LoginRequiredMixin, ListView):
 
         if search_query:
             queryset = queryset.filter(
-                Q(qrcode=search_query) |  # aniq tenglik
+                Q(qrcode=search_query) |
                 Q(name__icontains=search_query)
             )
 
-        # pagination faqat qidiruv bo‘lmaganda
-        if search_query:
-            self.paginate_by = None
-        else:
-            self.paginate_by = 30
+        # ✅ doim 30 tadan bo‘linadi
+        self.paginate_by = 30
 
-        return queryset.order_by('name')
+        # ✅ Barcha mahsulotlar saralanadi → keyin pagination ishlaydi
+        return queryset.order_by('-stock', 'name')
 
     def get_context_data(self, **kwargs):
         """Qo‘shimcha kontekstlar"""
