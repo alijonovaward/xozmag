@@ -24,7 +24,7 @@ class ProductListView(LoginRequiredMixin, ListView):
         profile = getattr(self.request.user, 'profile', None)
         search_query = self.request.GET.get('q', '').strip()
 
-        queryset = Product.objects.filter(profile=profile)
+        queryset = Product.objects.filter(profile=profile).order_by('stock')
 
         if search_query:
             queryset = queryset.filter(
@@ -38,7 +38,7 @@ class ProductListView(LoginRequiredMixin, ListView):
         else:
             self.paginate_by = 30
 
-        return queryset.order_by('name')
+        return queryset.order_by('-stock')
 
     def get_context_data(self, **kwargs):
         """Qo‘shimcha kontekstlar"""
